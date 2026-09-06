@@ -24,16 +24,16 @@
 Berikut adalah dokumentasi hasil tata letak responsif:
 
 ### 1. Layar Sempit (Satu Kolom)
-![Layar Sempit](screenshots/ss1.jpg)
+![Layar Sempit](screenshots/ss1.png)
 
 ### 2. Layar Sempit (Satu Kolom Dark)
-![Layar Lebar](screenshots/ss2.jpg)
+![Layar Lebar](screenshots/ss2.png)
 
 ### 3. Layar Lebar (Dua Kolom)
-![Layar Lebar](screenshots/ss3.jpg)
+![Layar Lebar](screenshots/ss3.png)
 
 ### 3. Layar Lebar (Satu Kolom)
-![Layar Lebar](screenshots/ss4.jpg)
+![Layar Lebar](screenshots/ss4.png)
 
 ## Cara Menjalankan
 1. Pastikan Anda berada di direktori proyek minggu ke-2:
