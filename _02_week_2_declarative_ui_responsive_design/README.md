@@ -38,7 +38,7 @@ Berikut adalah dokumentasi hasil tata letak responsif:
 ## Cara Menjalankan
 1. Pastikan Anda berada di direktori proyek minggu ke-2:
    ```bash
-   cd 02-week-2-declarative-ui-responsive-design
+   cd _02_week_2_declarative_ui_responsive_design
    ```
 2. Jalankan aplikasi pada emulator atau perangkat fisik:
    ```bash
@@ -73,19 +73,19 @@ Pengujian (*Widget Test*) telah ditambahkan pada folder `test/` untuk memverifik
 
 ## Refleksi
 **1. Apa perbedaan cara berpikir imperative dan declarative saat membangun UI?**
-- *Imperative*: Berfokus pada "langkah-langkah" (bagaimana cara mengubahnya). Kita harus memilih elemen spesifik (misal lewat ID) lalu memodifikasi propertinya satu per satu.
-- *Declarative*: Berfokus pada "hasil akhir" berdasarkan data (*state*) saat ini. UI adalah fungsi dari *state*. Saat data berubah, Flutter akan secara otomatis me-*rebuild* bagian UI yang relevan agar sesuai dengan data terbaru tanpa instruksi modifikasi manual.
+- Imperative berfokus pada "langkah-langkah" (bagaimana cara mengubahnya). Kita harus memilih elemen spesifik (misal lewat ID) lalu memodifikasi propertinya satu per satu.
+- Declarative berfokus pada "hasil akhir" berdasarkan data (*state*) saat ini. UI adalah fungsi dari *state*. Saat data berubah, Flutter akan secara otomatis me-*rebuild* bagian UI yang relevan agar sesuai dengan data terbaru tanpa instruksi modifikasi manual.
 
 **2. Kapan Expanded membantu dan kapan penggunaannya justru menghasilkan layout error?**
 - `Expanded` sangat membantu untuk mengisi atau membagi sisa ruang kosong secara proporsional di dalam `Row` atau `Column`.
 - Sebaliknya, `Expanded` akan menghasilkan error (seperti *RenderFlex children have non-zero flex but incoming height constraints are unbounded*) jika digunakan di dalam *widget* yang bisa di- *scroll* dan tidak memiliki batasan ukuran pasti, seperti `SingleChildScrollView` atau `ListView`.
 
 **3. Bagaimana breakpoint dan theme memengaruhi pengalaman pengguna?**
-- **Breakpoint**: Memastikan informasi disajikan dengan ukuran dan tata letak yang proporsional sesuai perangkat pengguna (HP maupun Tablet). Ini mencegah teks terlalu rapat di layar kecil atau terlalu merenggang (*whitespace* berlebih) di layar besar.
-- **Theme**: Memberikan konsistensi desain. Khususnya *Dark Mode*, fitur ini sangat memengaruhi kenyamanan visual, mengurangi ketegangan mata, dan pada beberapa jenis layar (OLED) dapat menghemat baterai.
+- **Breakpoint** memastikan informasi disajikan dengan ukuran dan tata letak yang proporsional sesuai perangkat pengguna (HP maupun Tablet). Ini mencegah teks terlalu rapat di layar kecil atau terlalu merenggang (*whitespace* berlebih) di layar besar.
+- **Theme** memberikan konsistensi desain. Khususnya *Dark Mode*, fitur ini sangat memengaruhi kenyamanan visual, mengurangi ketegangan mata, dan pada beberapa jenis layar (OLED) dapat menghemat baterai.
 
 **4. Apa yang Anda verifikasi dari rekomendasi AI setelah tugas inti selesai?**
 Saya memverifikasi tiga hal utama dari *output* AI: 
-- Kestabilan kode: memastikan *widget* bukan komponen *deprecated*.
-- Responsivitas absolut: memastikan tidak muncul garis kuning-hitam (*overflow*) saat layar dikecilkan secara ekstrem.
-- Validitas aksesibilitas: memastikan penggunaan `Semantics` atau atribut terkait ditempatkan pada level *widget* yang benar agar berfungsi nyata jika dibaca *screen reader*.
+- Kestabilan kode memastikan *widget* bukan komponen *deprecated*.
+- Responsivitas absolut memastikan tidak muncul garis kuning-hitam (*overflow*) saat layar dikecilkan secara ekstrem.
+- Validitas aksesibilitas memastikan penggunaan `Semantics` atau atribut terkait ditempatkan pada level *widget* yang benar agar berfungsi nyata jika dibaca *screen reader*.
