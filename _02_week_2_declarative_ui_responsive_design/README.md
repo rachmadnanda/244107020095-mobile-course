@@ -68,8 +68,8 @@ Sesuai instruksi, kode telah dirapikan (refactoring) dengan pencapaian:
 
 ## Testing Dasar
 Pengujian (*Widget Test*) telah ditambahkan pada folder `test/` untuk memverifikasi perilaku tata letak:
-- `Dashboard satu kolom di layar sempit` (Ukuran: 400x800) -> **PASSED**
-- `Dashboard dua kolom di layar lebar` (Ukuran: 1200x800) -> **PASSED**
+- `Dashboard satu kolom di layar sempit`
+- `Dashboard dua kolom di layar lebar`
 
 ## Refleksi
 **1. Apa perbedaan cara berpikir imperative dan declarative saat membangun UI?**
