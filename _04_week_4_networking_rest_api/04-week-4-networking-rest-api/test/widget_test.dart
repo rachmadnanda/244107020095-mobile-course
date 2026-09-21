@@ -6,9 +6,8 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:flutter_test/flutter_test.dart';
 import 'package:week_4_networking_rest_api/data/models/post.dart';
 import 'package:week_4_networking_rest_api/data/providers.dart';
 import 'package:week_4_networking_rest_api/data/repositories/post_repository.dart';
@@ -24,7 +23,9 @@ class FakePostRepository extends PostRepository {
 }
 
 void main() {
-  testWidgets('aplikasi menampilkan halaman posts', (WidgetTester tester) async {
+  testWidgets('aplikasi menampilkan halaman posts', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
