@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../data/local/note.dart';
 import '../data/repositories/note_repository.dart';
+import '../data/sync.dart';
+
+final forceOfflineProvider = StateProvider<bool>((ref) => false);
 
 final noteRepositoryProvider = Provider((ref) => NoteRepository());
 
@@ -94,15 +98,43 @@ class NotesPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Catatan'),
         actions: [
-          FutureBuilder<int>(
-            future: repository.countDirty(),
-            builder: (context, snapshot) {
-              final count = snapshot.data ?? 0;
+          Consumer(
+            builder: (context, ref, child) {
+              final offline = ref.watch(forceOfflineProvider);
 
-              return Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Center(child: Text('Belum sinkron: $count')),
+              return Switch(
+                value: offline,
+                onChanged: (value) {
+                  ref.read(forceOfflineProvider.notifier).state = value;
+                },
               );
+            },
+          ),
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Text('Offline'),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Sinkronisasi',
+            icon: const Icon(Icons.sync),
+            onPressed: () async {
+              final count = await syncNotes(ref.read(noteRepositoryProvider));
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      count == 0
+                          ? 'Tidak ada catatan yang perlu disinkronkan'
+                          : '$count catatan berhasil disinkronkan',
+                    ),
+                  ),
+                );
+              }
+
+              ref.invalidate(notesProvider);
             },
           ),
         ],
@@ -122,14 +154,16 @@ class NotesPage extends ConsumerWidget {
 
               return ListTile(
                 title: Text(note.title),
-                subtitle: Text(note.body),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    if (note.id != null) {
-                      ref.read(notesProvider.notifier).deleteNote(note.id!);
-                    }
-                  },
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(note.body),
+                    if (note.dirty)
+                      const Text(
+                        'Belum tersinkron',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                  ],
                 ),
               );
             },
