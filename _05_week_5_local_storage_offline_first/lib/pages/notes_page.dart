@@ -117,21 +117,37 @@ class NotesPage extends ConsumerWidget {
             ),
           ),
           IconButton(
+            tooltip: 'Pengaturan',
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
+          ),
+          IconButton(
             tooltip: 'Sinkronisasi',
             icon: const Icon(Icons.sync),
             onPressed: () async {
-              final count = await syncNotes(ref.read(noteRepositoryProvider));
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      count == 0
-                          ? 'Tidak ada catatan yang perlu disinkronkan'
-                          : '$count catatan berhasil disinkronkan',
-                    ),
-                  ),
+              try {
+                final count = await syncNotes(
+                  ref.read(noteRepositoryProvider),
+                  offline: ref.read(forceOfflineProvider),
                 );
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        count == 0
+                            ? 'Tidak ada catatan yang perlu disinkronkan'
+                            : '$count catatan berhasil disinkronkan',
+                      ),
+                    ),
+                  );
+                }
+              } on StateError catch (error) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error.message)),
+                  );
+                }
               }
 
               ref.invalidate(notesProvider);

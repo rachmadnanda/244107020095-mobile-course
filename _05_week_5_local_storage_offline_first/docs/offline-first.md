@@ -20,3 +20,14 @@ Setelah proses sinkronisasi berhasil, nilai dirty diubah menjadi `0`.
 Aplikasi menggunakan aturan last-write-wins berdasarkan `updated_at`.
 Jika terdapat dua versi data yang berbeda, versi dengan waktu perubahan
 paling baru digunakan.
+
+## Bukti demo mode pesawat
+
+Simpan screenshot berikut setelah menjalankan aplikasi pada perangkat/emulator:
+
+- `screenshots/offline-list.png`: daftar catatan tetap tampil saat offline.
+- `screenshots/dirty-before-sync.png`: catatan baru dengan badge `Belum tersinkron`.
+- `screenshots/dirty-after-sync.png`: badge hilang setelah sync berhasil.
+
+File `.gitkeep` menjaga folder screenshot tetap ada sebelum bukti demo
+ditambahkan.

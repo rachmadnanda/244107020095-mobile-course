@@ -30,7 +30,11 @@ Future<List<Map<String, dynamic>>> readCachedPosts() async {
       .toList();
 }
 
-Future<int> syncNotes(NoteRepository repo) async {
+Future<int> syncNotes(NoteRepository repo, {bool offline = false}) async {
+  if (offline) {
+    throw StateError('Sinkronisasi tidak tersedia saat mode offline aktif');
+  }
+
   final dirtyCount = await repo.countDirty();
 
   if (dirtyCount == 0) return 0;
