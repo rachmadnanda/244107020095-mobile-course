@@ -8,15 +8,17 @@ void main() {
   testWidgets('NoteTile menampilkan badge dirty', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: NoteTile(
-          note: Note(
-            title: 'Offline',
-            body: 'Isi',
-            updatedAt: DateTime(2026, 9, 28),
-            dirty: true,
+        home: Scaffold(
+          body: NoteTile(
+            note: Note(
+              title: 'Offline',
+              body: 'Isi',
+              updatedAt: DateTime(2026, 9, 28),
+              dirty: true,
+            ),
+            onTap: () {},
+            onDelete: () {},
           ),
-          onTap: () {},
-          onDelete: () {},
         ),
       ),
     );

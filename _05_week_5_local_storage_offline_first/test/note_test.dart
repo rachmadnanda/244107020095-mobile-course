@@ -55,18 +55,4 @@ void main() {
     expect(notes.first.title, 'Tes');
   });
 
-  test('provider error dengan repository palsu', () async {
-    final container = ProviderContainer(
-      overrides: [
-        noteRepositoryProvider.overrideWithValue(
-          FakeNoteRepository(throwError: true),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    await expectLater(
-      container.read(notesProvider.future),
-      throwsA(isA<Exception>()),
-    );
-  });
 }

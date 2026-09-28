@@ -18,8 +18,8 @@ final notesProvider = AsyncNotifierProvider<NotesNotifier, List<Note>>(
 
 class NotesNotifier extends AsyncNotifier<List<Note>> {
   @override
-  Future<List<Note>> build() {
-    return ref.watch(noteRepositoryProvider).fetchNotes();
+  Future<List<Note>> build() async {
+    return await ref.watch(noteRepositoryProvider).fetchNotes();
   }
 
   Future<void> addNote(String title, String body) async {

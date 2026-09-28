@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/note.dart';
-import '../data/repositories/note_repository.dart';
+import 'notes_page.dart';
 
 final noteByIdProvider = FutureProvider.family<Note?, int>((ref, id) {
   return ref.watch(noteRepositoryProvider).fetchNote(id);
@@ -32,7 +32,10 @@ class NoteDetailPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value.title, style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  value.title,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 16),
                 Text(value.body),
                 if (value.dirty) ...[
