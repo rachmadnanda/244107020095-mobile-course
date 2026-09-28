@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:go_router/go_router.dart';
 
 import '../data/local/note.dart';
 import '../data/repositories/note_repository.dart';
 import '../data/sync.dart';
+import '../widgets/note_tile.dart';
 
 final forceOfflineProvider = StateProvider<bool>((ref) => false);
 
@@ -92,8 +94,6 @@ class NotesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notes = ref.watch(notesProvider);
-    final repository = ref.watch(noteRepositoryProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catatan'),
@@ -152,19 +152,12 @@ class NotesPage extends ConsumerWidget {
             itemBuilder: (context, index) {
               final note = items[index];
 
-              return ListTile(
-                title: Text(note.title),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(note.body),
-                    if (note.dirty)
-                      const Text(
-                        'Belum tersinkron',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                  ],
-                ),
+              return NoteTile(
+                note: note,
+                onTap: () => context.push('/note/${note.id}'),
+                onDelete: note.id == null
+                    ? () {}
+                    : () => ref.read(notesProvider.notifier).deleteNote(note.id!),
               );
             },
           );

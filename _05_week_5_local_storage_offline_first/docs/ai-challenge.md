@@ -152,3 +152,14 @@ Hasil pengujian yang harus dicatat:
 ## Kesimpulan
 
 Kombinasi `SharedPreferences + SQLite` dipilih karena sesuai dengan karakteristik masing-masing data. Preferensi tema berukuran kecil dan berbentuk key-value, sedangkan catatan membutuhkan query, indeks, transaksi, dan dukungan untuk antrean sinkronisasi offline.
+
+## Verifikasi Refactoring Tahap 7
+
+- Baris daftar catatan diekstrak ke widget `NoteTile` dan menampilkan badge
+  `Belum tersinkron` saat `dirty` bernilai benar.
+- Cache posts dan `syncNotes` dipusatkan di `lib/data/sync.dart`; file lama
+  `post_cache.dart` hanya mempertahankan export kompatibilitas.
+- Detail catatan tersedia melalui GoRouter pada `/note/:id` dan mengambil data
+  langsung dari repository lokal melalui provider family.
+- `test/note_test.dart` menguji mapping null-safe serta provider dengan
+  `FakeNoteRepository`, tanpa membuka SQLite.
