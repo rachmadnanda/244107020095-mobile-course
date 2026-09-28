@@ -1,10 +1,10 @@
 # Laporan Praktikum Minggu 5 — Local Storage & Offline-First
 
+**Nama:** Rachmad Febriananda
 **Mata kuliah:** Pemrograman Mobile
 **Topik:** SharedPreferences, SQLite, repository, Riverpod, offline-first,
 testing, dan sinkronisasi
 **Project:** Offline Notes
-**Codelab:** [05 Minggu 5 — Local Storage Offline-First](https://jti-polinema.github.io/flutter-codelab/05-minggu-5-local-storage-offline-first/index.html#0)
 
 ## 1. Tujuan
 
@@ -258,23 +258,23 @@ Screenshot berikut adalah bukti proses dari praktikum hingga tugas akhir.
 Nama file menyimpan waktu pengambilan, sehingga urutannya dipertahankan dari
 yang paling awal sampai paling akhir.
 
-| Waktu | Tahap/keterangan | Bukti |
-|---|---|---|
-| 13:30:33 | Kode repository preferensi SharedPreferences | ![13:30:33](screenshots/satty-2026-09-28_13:30:33.png) |
-| 13:41:18 | Halaman Pengaturan, toggle tema terang | ![13:41:18](screenshots/satty-2026-09-28_13:41:18.png) |
-| 13:42:06 | Toggle tema gelap berhasil berubah | ![13:42:06](screenshots/satty-2026-09-28_13:42:06.png) |
-| 13:52:45 | Waktu terakhir dibuka tampil | ![13:52:45](screenshots/satty-2026-09-28_13:52:45.png) |
-| 13:53:34 | Preferensi tersimpan setelah dibuka kembali | ![13:53:34](screenshots/satty-2026-09-28_13:53:34.png) |
-| 14:17:41 | Praktikum SQLite: daftar masih kosong | ![14:17:41](screenshots/satty-2026-09-28_14:17:41.png) |
-| 14:18:20 | Catatan SQLite berhasil ditambahkan | ![14:18:20](screenshots/satty-2026-09-28_14:18:20.png) |
-| 14:18:44 | Dialog tambah catatan dan input form | ![14:18:44](screenshots/satty-2026-09-28_14:18:44.png) |
-| 14:19:48 | Error runtime saat proses awal, menjadi bahan debugging | ![14:19:48](screenshots/satty-2026-09-28_14:19:48.png) |
-| 14:23:10 | Dua catatan tersimpan secara persisten | ![14:23:10](screenshots/satty-2026-09-28_14:23:10.png) |
-| 15:31:19 | Mode Offline aktif, badge dirty terlihat | ![15:31:19](screenshots/satty-2026-09-28_15:31:19.png) |
-| 15:32:02 | Daftar tetap dapat dibaca saat offline | ![15:32:02](screenshots/satty-2026-09-28_15:32:02.png) |
-| 15:32:23 | Catatan lokal tetap tampil dalam mode offline | ![15:32:23](screenshots/satty-2026-09-28_15:32:23.png) |
-| 15:32:33 | Setelah sync, catatan tetap tersedia dan badge berubah | ![15:32:33](screenshots/satty-2026-09-28_15:32:33.png) |
-| 16:28:46 | Hasil akhir: mode gelap, settings, detail, dan catatan offline | ![16:28:46](screenshots/satty-2026-09-28_16:28:46.png) |
+| Tahap/keterangan | Bukti |
+|---|---|
+| Kode repository preferensi SharedPreferences | ![13:30:33](screenshots/satty-2026-09-28_13:30:33.png) |
+| Halaman Pengaturan, toggle tema terang | ![13:41:18](screenshots/satty-2026-09-28_13:41:18.png) |
+| Toggle tema gelap berhasil berubah | ![13:42:06](screenshots/satty-2026-09-28_13:42:06.png) |
+| Waktu terakhir dibuka tampil | ![13:52:45](screenshots/satty-2026-09-28_13:52:45.png) |
+| Preferensi tersimpan setelah dibuka kembali | ![13:53:34](screenshots/satty-2026-09-28_13:53:34.png) |
+| Praktikum SQLite: daftar masih kosong | ![14:17:41](screenshots/satty-2026-09-28_14:17:41.png) |
+| Catatan SQLite berhasil ditambahkan | ![14:18:20](screenshots/satty-2026-09-28_14:18:20.png) |
+| Dialog tambah catatan dan input form | ![14:18:44](screenshots/satty-2026-09-28_14:18:44.png) |
+| Error runtime saat proses awal, menjadi bahan debugging | ![14:19:48](screenshots/satty-2026-09-28_14:19:48.png) |
+| Dua catatan tersimpan secara persisten | ![14:23:10](screenshots/satty-2026-09-28_14:23:10.png) |
+| Mode Offline aktif, badge dirty terlihat | ![15:31:19](screenshots/satty-2026-09-28_15:31:19.png) |
+| Daftar tetap dapat dibaca saat offline | ![15:32:02](screenshots/satty-2026-09-28_15:32:02.png) |
+| Catatan lokal tetap tampil dalam mode offline | ![15:32:23](screenshots/satty-2026-09-28_15:32:23.png) |
+| Setelah sync, catatan tetap tersedia dan badge berubah | ![15:32:33](screenshots/satty-2026-09-28_15:32:33.png) |
+| Hasil akhir: mode gelap, settings, detail, dan catatan offline | ![16:28:46](screenshots/satty-2026-09-28_16:28:46.png) |
 
 ## 10. Refleksi
 
