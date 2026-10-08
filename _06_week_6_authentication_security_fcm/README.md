@@ -51,6 +51,7 @@ lib/
 │   ├── api_client.dart      # Dio + interceptor refresh otomatis
 │   ├── api_errors.dart      # DioException -> pesan ramah pengguna
 │   ├── auth_repository.dart # mock auth (siap diganti Firebase Auth)
+│   ├── device_repository.dart # POST /devices (daftar token FCM ke backend)
 │   └── token_store.dart     # secure storage token
 ├── messaging/
 │   ├── push_service.dart    # permission, token lifecycle, 3 handler, topik
@@ -100,7 +101,8 @@ Aplikasi --daftar token--> Backend (simpan token per user)
 
 1. Aplikasi meminta izin notifikasi (`requestNotificationPermission`).
 2. Aplikasi mengambil registration token (`FirebaseMessaging.instance.getToken()`).
-3. Token dikirim ke backend dan dipantau perubahannya (`onTokenRefresh`).
+3. Token dikirim ke backend (`POST /devices` via `DeviceRepository`) dan
+   dipantau perubahannya (`onTokenRefresh`).
 4. Backend memanggil FCM API untuk mengirim ke token/topik tertentu.
 
 ### Payload uji (gabungan notification + data)
@@ -128,9 +130,11 @@ di folder `screenshots/`.
 
 | State | Yang diharapkan | Cara uji | Status | Bukti |
 | --- | --- | --- | --- | --- |
-| Foreground | Banner lokal muncul (dari `onMessage`), klik masuk ke `/pengumuman/3` | Aplikasi terbuka, kirim dari console/backend | ✅ | `screenshots/fcm-foreground.png` |
-| Background | Banner sistem muncul otomatis, klik masuk ke rute yang benar | Tekan Home, kirim, klik banner | ✅ | `screenshots/fcm-background.png` |
-| Terminated | Aplikasi terbuka ke rute yang benar via `getInitialMessage()` | Swipe-close aplikasi, kirim, klik banner | ✅ | `screenshots/fcm-terminated.png` |
+| Foreground | Banner lokal muncul (dari `onMessage`), klik masuk ke `/pengumuman/3` | Aplikasi terbuka, kirim dari console/backend | ⬜ Belum diuji | `screenshots/fcm-foreground.png` |
+| Background | Banner sistem muncul otomatis, klik masuk ke rute yang benar | Tekan Home, kirim, klik banner | ⬜ Belum diuji | `screenshots/fcm-background.png` |
+| Terminated | Aplikasi terbuka ke rute yang benar via `getInitialMessage()` | Swipe-close aplikasi, kirim, klik banner | ⬜ Belum diuji | `screenshots/fcm-terminated.png` |
+
+Matriks lengkap + langkah pengujian: [`docs/fcm-test-matrix.md`](docs/fcm-test-matrix.md).
 
 Catatan pengujian:
 
@@ -143,8 +147,23 @@ Catatan pengujian:
 
 - Token hanya disimpan di `flutter_secure_storage`, **tidak** di `SharedPreferences`.
 - Token/secret tidak di-hardcode di Dart.
+- Token FCM tidak dicetak **penuh** ke log; hanya versi terpotong untuk laporan.
 - Refresh token hanya dikirim lewat body `POST` HTTPS, tidak pernah lewat query URL.
 - Halaman Home hanya menampilkan token terpotong untuk screenshot laporan.
+
+## AI Challenge
+
+Proses AI Challenge (prompt, output awal AI, hasil verifikasi, perbaikan manual,
+dan keputusan teknis) didokumentasikan di folder `docs/`:
+
+- [`docs/ai-challenge.md`](docs/ai-challenge.md) — prompt, draf AI, checklist, perbaikan, alasan.
+- [`docs/ai-draft-push-service.dart`](docs/ai-draft-push-service.dart) — output awal AI (arsip).
+- [`docs/fcm-test-matrix.md`](docs/fcm-test-matrix.md) — matriks uji tiga app state.
+
+Ringkasan perbaikan atas draf AI: background handler dijadikan fungsi top-level
+ber-`@pragma('vm:entry-point')`, `onTokenRefresh` benar-benar `POST /devices`,
+foreground memakai local notification manual, navigasi deep link memakai GoRouter,
+dan token tidak lagi di-log penuh.
 
 ## Hasil yang dicapai
 

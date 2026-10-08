@@ -1,8 +1,14 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'data/api_client.dart';
+import 'data/api_errors.dart';
+import 'data/auth_repository.dart';
+import 'data/device_repository.dart';
+import 'data/token_store.dart';
 import 'messaging/push_service.dart';
 import 'pages/announcement_page.dart';
 import 'pages/home_page.dart';
@@ -13,14 +19,31 @@ import 'routes.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Klien Dio (dengan refresh token otomatis) dipakai untuk mendaftarkan
+  // token FCM ke backend `POST /devices`.
+  final deviceRepository = DeviceRepository(
+    buildApiClient(TokenStore(), AuthRepository()),
+  );
+
   registerBackgroundHandler();
   await initLocalNotifications();
   await requestNotificationPermission();
   await initFcmToken(
     onToken: (token) async {
-      // Untuk Praktikum 2, cukup print token (backend belum ada).
-      debugPrint('Token dikirim ke backend: ${token.substring(0, 12)}...');
-      // Di produksi: dio.post('/devices', data: {'fcm_token': token});
+      // `onToken` dipanggil lagi oleh onTokenRefresh setiap token berubah,
+      // jadi backend selalu menerima token terbaru.
+      try {
+        await deviceRepository.registerToken(
+          token: token,
+          platform: defaultTargetPlatform == TargetPlatform.iOS
+              ? 'ios'
+              : 'android',
+        );
+      } catch (e) {
+        // Offline / backend belum siap: jangan sampai membuat app crash.
+        debugPrint('Gagal mendaftarkan token FCM: ${friendlyError(e)}');
+      }
     },
   );
   runApp(const ProviderScope(child: CampusNotifyApp()));

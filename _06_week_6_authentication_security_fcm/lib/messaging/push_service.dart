@@ -18,6 +18,10 @@ String? pendingDeepLink;
 void Function(String route)? onNotificationTap;
 
 /// Background handler — WAJIB top-level & @pragma.
+///
+/// TIDAK BOLEH mengakses BuildContext, Navigator, atau Riverpod di sini:
+/// fungsi ini berjalan di isolate terpisah tanpa widget tree. Cukup catat
+/// data ringan; navigasi dilakukan saat notifikasi diklik.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('BG message: ${message.messageId}');
@@ -28,6 +32,9 @@ void registerBackgroundHandler() {
 }
 
 Future<bool> requestNotificationPermission() async {
+  // Android 13+ (API 33) dan iOS memerlukan izin runtime lewat dialog ini;
+  // Android < 13 otomatis `authorized`. Permission `POST_NOTIFICATIONS`
+  // sudah disediakan plugin firebase_messaging.
   final settings = await FirebaseMessaging.instance.requestPermission(
     alert: true,
     badge: true,
@@ -38,6 +45,8 @@ Future<bool> requestNotificationPermission() async {
 }
 
 Future<void> initLocalNotifications() async {
+  // Android memakai ikon `@mipmap/ic_launcher`; iOS memakai
+  // DarwinInitializationSettings (banner foreground butuh ini + izin).
   const android = AndroidInitializationSettings('@mipmap/ic_launcher');
   const ios = DarwinInitializationSettings();
   await _local.initialize(

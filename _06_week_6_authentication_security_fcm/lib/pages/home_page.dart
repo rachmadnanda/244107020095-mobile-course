@@ -28,11 +28,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     final token = await FirebaseMessaging.instance.getToken();
     if (!mounted) return;
 
-    // Print token PENUH ke terminal flutter run (untuk copy-paste).
-    debugPrint('================ FCM TOKEN (FULL) ================');
-    debugPrint(token ?? 'NULL');
-    debugPrint('==================================================');
-
+    // Token TIDAK dicetak ke log (prinsip keamanan). Untuk uji FCM dari
+    // Firebase Console, gunakan tombol "Copy Token Penuh" di bawah.
     setState(() {
       _tokenFull = token;
       _tokenSnippet = token == null
