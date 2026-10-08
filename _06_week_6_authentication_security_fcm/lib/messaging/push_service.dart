@@ -3,10 +3,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 
+import 'route_parser.dart';
+
 final _local = FlutterLocalNotificationsPlugin();
 
-/// Payload dari klik banner saat app hidup.
+/// Topik broadcast pengumuman kampus (broadcast ke semua mahasiswa).
+const announcementsTopic = 'pengumuman-kampus';
+
+/// Payload dari klik banner saat app belum siap (terminated).
 String? pendingDeepLink;
+
+/// Callback navigasi saat banner lokal (foreground) diklik dan app sudah hidup.
+/// Diisi dari `main.dart` setelah GoRouter dibuat.
+void Function(String route)? onNotificationTap;
 
 /// Background handler — WAJIB top-level & @pragma.
 @pragma('vm:entry-point')
@@ -34,7 +43,15 @@ Future<void> initLocalNotifications() async {
   await _local.initialize(
     settings: const InitializationSettings(android: android, iOS: ios),
     onDidReceiveNotificationResponse: (response) {
-      pendingDeepLink = response.payload;
+      final route = response.payload;
+      if (route == null || route.isEmpty) return;
+      // App hidup -> navigasi langsung. Belum siap -> simpan untuk
+      // diproses `handleTerminated` saat startup.
+      if (onNotificationTap != null) {
+        onNotificationTap!(route);
+      } else {
+        pendingDeepLink = route;
+      }
     },
   );
 }
@@ -47,13 +64,17 @@ Future<void> initFcmToken({
 
   FirebaseMessaging.instance.onTokenRefresh.listen(onToken);
 
-  await FirebaseMessaging.instance.subscribeToTopic('pengumuman-kampus');
+  await FirebaseMessaging.instance.subscribeToTopic(announcementsTopic);
 }
+
+/// Berhenti dari topik broadcast (mis. saat logout).
+Future<void> unsubscribeFromAnnouncements() =>
+    FirebaseMessaging.instance.unsubscribeFromTopic(announcementsTopic);
 
 /// Foreground + background-click listener.
 void listenForeground(GoRouter router) {
   FirebaseMessaging.onMessage.listen((message) async {
-    final route = message.data['route'] ?? '/';
+    final route = routeFromMessage(message.data);
     const androidDetails = AndroidNotificationDetails(
       'pengumuman',
       'Pengumuman Kampus',
@@ -70,17 +91,19 @@ void listenForeground(GoRouter router) {
   });
 
   FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    final route = message.data['route'];
-    if (route != null) router.go(route);
+    router.go(routeFromMessage(message.data));
   });
 }
 
 Future<void> handleTerminated(GoRouter router) async {
   final initial = await FirebaseMessaging.instance.getInitialMessage();
+  debugPrint('>>> TERMINATED: data = ${initial?.data}');
   if (initial != null) {
-    final route = initial.data['route'];
-    if (route != null) router.go(route);
+    final route = routeFromMessage(initial.data);
+    debugPrint('>>> TERMINATED route = $route');
+    router.go(route);
   }
+  debugPrint('>>> pendingDeepLink = $pendingDeepLink');
   if (pendingDeepLink != null) {
     router.go(pendingDeepLink!);
     pendingDeepLink = null;

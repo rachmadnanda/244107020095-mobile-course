@@ -51,14 +51,17 @@ class _CampusNotifyAppState extends ConsumerState<CampusNotifyApp> {
         return null;
       },
       routes: [
-        GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginPage()),
-        GoRoute(path: AppRoutes.home, builder: (_, __) => const HomePage()),
+        GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
+        GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
         GoRoute(
           path: AppRoutes.announcement,
           builder: (_, s) => AnnouncementPage(id: s.pathParameters['id'] ?? ''),
         ),
       ],
     );
+
+    // Klik banner lokal saat foreground -> navigasi via router yang sama.
+    onNotificationTap = _router.go;
 
     // Daftarkan handler FCM — foreground + klik background.
     listenForeground(_router);
@@ -70,13 +73,14 @@ class _CampusNotifyAppState extends ConsumerState<CampusNotifyApp> {
 
   @override
   void dispose() {
+    onNotificationTap = null;
     _refreshNotifier.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(authStateProvider, (_, __) {
+    ref.listen(authStateProvider, (_, _) {
       _refreshNotifier.value++;
     });
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/api_client.dart';
 import '../data/auth_repository.dart';
 import '../data/token_store.dart';
+import '../messaging/push_service.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
 
@@ -43,11 +44,12 @@ class AuthNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
-    // Error #10 resolved: unsubscribe topik saat logout
+    // Berhenti dari topik broadcast saat logout (jangan tinggalkan langganan).
     try {
-      // import push_service & unsubscribe
-      // await FirebaseMessaging.instance.unsubscribeFromTopic('pengumuman-kampus');
-    } catch (_) {}
+      await unsubscribeFromAnnouncements();
+    } catch (_) {
+      // Firebase belum siap (mis. unit test) — abaikan.
+    }
     await ref.read(tokenStoreProvider).clear();
     ref.invalidateSelf();
   }
