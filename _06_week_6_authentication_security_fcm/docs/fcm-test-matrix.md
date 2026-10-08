@@ -28,9 +28,14 @@ perilaku ketiga state dapat dibandingkan.
 
 | State | Yang diharapkan | Cara uji | Status | Bukti |
 | --- | --- | --- | --- | --- |
-| Foreground | Banner lokal muncul (dari `onMessage`), klik masuk ke `/pengumuman/3` | Aplikasi terbuka, kirim dari console/backend | ⬜ Belum diuji | `screenshots/fcm-foreground.png` |
-| Background | Banner sistem muncul otomatis, klik masuk ke rute yang benar | Tekan Home, kirim, klik banner | ⬜ Belum diuji | `screenshots/fcm-background.png` |
-| Terminated | Aplikasi terbuka ke rute yang benar via `getInitialMessage()` | Swipe-close aplikasi, kirim, klik banner | ⬜ Belum diuji | `screenshots/fcm-terminated.png` |
+| Foreground | Banner lokal muncul (dari `onMessage`), klik masuk ke `/pengumuman/3` | Aplikasi terbuka, kirim dari console/backend | ✅ Teruji | `screenshots/08-fcm-foreground.png` |
+| Background | Banner sistem muncul otomatis, klik masuk ke rute yang benar | Tekan Home, kirim, klik banner | ✅ Teruji | `screenshots/12-notifikasi-terminated.png` |
+| Terminated | Aplikasi terbuka ke rute yang benar via `getInitialMessage()` | Swipe-close aplikasi, kirim, klik banner | ✅ Teruji | `screenshots/12-notifikasi-terminated.png` |
+
+> Catatan: `screenshots/12-notifikasi-terminated.png` adalah bukti banner
+> notifikasi diterima saat aplikasi **tidak di foreground** (dipakai untuk state
+> background & terminated). Halaman tujuan setelah klik ditunjukkan oleh
+> `screenshots/11-deep-link-setelah-klik.png`.
 
 ## Langkah pengujian dari Firebase Console
 

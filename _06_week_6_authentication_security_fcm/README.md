@@ -130,9 +130,9 @@ di folder `screenshots/`.
 
 | State | Yang diharapkan | Cara uji | Status | Bukti |
 | --- | --- | --- | --- | --- |
-| Foreground | Banner lokal muncul (dari `onMessage`), klik masuk ke `/pengumuman/3` | Aplikasi terbuka, kirim dari console/backend | ⬜ Belum diuji | `screenshots/fcm-foreground.png` |
-| Background | Banner sistem muncul otomatis, klik masuk ke rute yang benar | Tekan Home, kirim, klik banner | ⬜ Belum diuji | `screenshots/fcm-background.png` |
-| Terminated | Aplikasi terbuka ke rute yang benar via `getInitialMessage()` | Swipe-close aplikasi, kirim, klik banner | ⬜ Belum diuji | `screenshots/fcm-terminated.png` |
+| Foreground | Banner lokal muncul (dari `onMessage`), klik masuk ke `/pengumuman/3` | Aplikasi terbuka, kirim dari console/backend | ✅ Teruji | [`screenshots/08-fcm-foreground.png`](screenshots/08-fcm-foreground.png) |
+| Background | Banner sistem muncul otomatis, klik masuk ke rute yang benar | Tekan Home, kirim, klik banner | ✅ Teruji | [`screenshots/12-notifikasi-terminated.png`](screenshots/12-notifikasi-terminated.png) |
+| Terminated | Aplikasi terbuka ke rute yang benar via `getInitialMessage()` | Swipe-close aplikasi, kirim, klik banner | ✅ Teruji | [`screenshots/12-notifikasi-terminated.png`](screenshots/12-notifikasi-terminated.png) |
 
 Matriks lengkap + langkah pengujian: [`docs/fcm-test-matrix.md`](docs/fcm-test-matrix.md).
 
@@ -142,6 +142,42 @@ Catatan pengujian:
 - Untuk menguji dari Firebase Console: **Messaging → New campaign**, isi
   `title`/`body`, dan tambahkan custom data `route = /pengumuman/3` (atau targetkan
   topik `pengumuman-kampus`).
+
+## Screenshots
+
+Galeri lengkap + keterangan tiap gambar: [`screenshots/README.md`](screenshots/README.md).
+
+**Login & guard route**
+
+| Login | Login terisi | Home |
+| --- | --- | --- |
+| ![Login](screenshots/01-login.png) | ![Login terisi](screenshots/02-login-terisi.png) | ![Home](screenshots/03-home.png) |
+
+**Deep link GoRouter**
+
+| Buka Pengumuman #3 | Setelah klik notifikasi |
+| --- | --- |
+| ![Deep link](screenshots/04-deep-link-pengumuman.png) | ![Deep link notifikasi](screenshots/11-deep-link-setelah-klik.png) |
+
+**Izin notifikasi & token FCM**
+
+| Izin notifikasi (Android 13+) | Token FCM terpotong |
+| --- | --- |
+| ![Izin notifikasi](screenshots/05-izin-notifikasi.png) | ![Token FCM](screenshots/07-fcm-token-terpotong.png) |
+
+**Kirim dari Firebase Console (topik `pengumuman-kampus`)**
+
+| Campaign aktif | Compose notification | Daftar campaign |
+| --- | --- | --- |
+| ![Campaign](screenshots/06-fcm-campaign.png) | ![Compose](screenshots/09-fcm-compose.png) | ![Terkirim](screenshots/10-fcm-campaign-terkirim.png) |
+
+**Notifikasi state foreground**
+
+![Banner foreground](screenshots/08-fcm-foreground.png)
+
+**Notifikasi state background & terminated**
+
+![Notifikasi background/terminated](screenshots/12-notifikasi-terminated.png)
 
 ## Keamanan
 
@@ -171,3 +207,59 @@ dan token tidak lagi di-log penuh.
   konvensi penamaan folder repo).
 - `flutter test`: 7 test lulus (`test/auth_push_test.dart`) — parsing route,
   logika sesi, dan kegagalan refresh.
+
+## Refleksi
+
+**1. Mengapa refresh token tidak boleh disimpan di SharedPreferences? Apa risikonya bila bocor?**
+
+`SharedPreferences` menyimpan data sebagai file XML (Android) / plist (iOS)
+**tanpa enkripsi**. Isinya dapat dibaca pada perangkat yang di-root/jailbreak atau
+lewat backup yang diekspor. Refresh token berumur panjang (mis. 7 hari) dan
+berfungsi sebagai tiket untuk menerbitkan access token baru tanpa login ulang,
+jadi bila bocor penyerang dapat terus menyamar sebagai pengguna — bahkan setelah
+kata sandi diganti — sampai refresh token kedaluwarsa/dicabut. Karena itu refresh
+token hanya boleh disimpan di `flutter_secure_storage` yang memakai Keychain
+(iOS) / Keystore (Android), sedangkan access token cukup di memori.
+
+**2. Apa yang rusak bila `onTokenRefresh` diabaikan selama satu semester perkuliahan?**
+
+FCM registration token dapat berubah kapan saja: reinstall, clear data, restore
+dari backup, atau rotasi keamanan Firebase. Bila `onTokenRefresh` tidak dipasang,
+backend menyimpan token lama yang sudah tidak valid, sehingga notifikasi ke token
+itu **gagal terkirim secara diam-diam** (tidak ada error di sisi server).
+Akibatnya mahasiswa tidak menerima pengumuman padahal pengiriman tercatat
+"sukses" — masalah baru ketahuan saat ada informasi penting. Karena itu handler
+ini wajib agar backend selalu memegang token terbaru.
+
+**3. Kapan memakai topik dan kapan memakai token perangkat? Beri contoh pesan kampus untuk masing-masing.**
+
+- **Topik** untuk **broadcast** ke banyak pengguna tanpa perlu tahu daftarnya:
+  semua mahasiswa, satu angkatan, satu kelas, atau satu UKM. Contoh:
+  "Kampus libur nasional tanggal 25 Desember", "Jadwal UTS semester 5 sudah
+  terbit", "Rapat UKM Programming Club besok pukul 16.00".
+- **Token perangkat** untuk **pesan personal/privat** yang hanya relevan bagi
+  satu pengguna. Contoh: "Nilai mata kuliah Pemrograman Mobile Anda sudah
+  keluar", "Tagihan UKT atas nama Anda jatuh tempo", "Jadwal bimbingan Anda
+  diubah ke pukul 10.00".
+
+Aturan praktis: jika pesan boleh dibaca semua orang → **topik**; jika hanya untuk
+satu orang atau sensitif → **token perangkat**.
+
+**4. Bagian mana dari draf AI yang Anda tolak atau perbaiki, dan mengapa?**
+
+Detail lengkap ada di [`docs/ai-challenge.md`](docs/ai-challenge.md). Ringkasannya:
+
+- **Menolak background handler sebagai method kelas** → diubah menjadi fungsi
+  top-level ber-`@pragma('vm:entry-point')`, karena handler berjalan di isolate
+  terpisah dan berisiko terbuang tree-shaking pada build rilis.
+- **Memperbaiki `onTokenRefresh` yang hanya `debugPrint`** → diganti pengiriman
+  nyata ke `POST /devices` via `DeviceRepository`, agar backend tidak menyimpan
+  token basi.
+- **Menolak navigasi `navigatorKey.pushNamed`** → diganti `GoRouter.go` +
+  `routeFromMessage()`, karena `pushNamed` melewati guard login GoRouter dan route
+  mentah (tanpa slash) bisa tidak valid.
+- **Memperbaiki foreground yang hanya log** → ditambah local notification manual,
+  karena sistem tidak menampilkan banner saat aplikasi terbuka.
+- **Menghapus log token penuh** → token FCM adalah kredensial; hanya versi
+  terpotong yang ditampilkan untuk laporan.
+- **Menambah unsubscribe topik saat logout** yang tidak ada di draf AI.
