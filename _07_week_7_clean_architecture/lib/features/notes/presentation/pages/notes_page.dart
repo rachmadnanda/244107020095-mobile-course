@@ -1,42 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/local/note.dart';
-import '../data/repositories/note_repository.dart';
-import '../data/sync.dart';
+import '../providers/notes_providers.dart';
 import '../widgets/note_tile.dart';
 
-final forceOfflineProvider = StateProvider<bool>((ref) => false);
-
-final noteRepositoryProvider = Provider((ref) => NoteRepository());
-
-final notesProvider = AsyncNotifierProvider<NotesNotifier, List<Note>>(
-  NotesNotifier.new,
-);
-
-class NotesNotifier extends AsyncNotifier<List<Note>> {
-  @override
-  Future<List<Note>> build() async {
-    return await ref.watch(noteRepositoryProvider).fetchNotes();
-  }
-
-  Future<void> addNote(String title, String body) async {
-    await ref.read(noteRepositoryProvider).addNote(title: title, body: body);
-
-    ref.invalidateSelf();
-    await future;
-  }
-
-  Future<void> deleteNote(int id) async {
-    await ref.read(noteRepositoryProvider).deleteNote(id);
-
-    ref.invalidateSelf();
-    await future;
-  }
-}
-
+/// Halaman daftar catatan. Hanya membaca state — tanpa SQL, Dio, JSON, atau
+/// formatting tanggal mentah. Semua logika melalui provider.
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
 
@@ -71,13 +41,20 @@ class NotesPage extends ConsumerWidget {
               onPressed: () async {
                 final title = titleController.text.trim();
                 final body = bodyController.text.trim();
-
                 if (title.isEmpty) return;
 
-                await ref.read(notesProvider.notifier).addNote(title, body);
+                final failure = await ref
+                    .read(notesProvider.notifier)
+                    .addNote(title, body);
 
                 if (context.mounted) {
-                  Navigator.pop(context);
+                  if (failure != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(failure.message)),
+                    );
+                  } else {
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: const Text('Simpan'),
@@ -91,6 +68,30 @@ class NotesPage extends ConsumerWidget {
     bodyController.dispose();
   }
 
+  Future<void> _onSync(BuildContext context, WidgetRef ref) async {
+    final offline = ref.read(forceOfflineProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final count = await ref
+          .read(notesProvider.notifier)
+          .sync(offline: offline);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 0
+                ? 'Tidak ada catatan yang perlu disinkronkan'
+                : '$count catatan berhasil disinkronkan',
+          ),
+        ),
+      );
+    } catch (error) {
+      // Failure sudah berupa pesan ramah pengguna (Exception(message)).
+      messenger.showSnackBar(
+        SnackBar(content: Text('$error'.replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notes = ref.watch(notesProvider);
@@ -101,12 +102,10 @@ class NotesPage extends ConsumerWidget {
           Consumer(
             builder: (context, ref, child) {
               final offline = ref.watch(forceOfflineProvider);
-
               return Switch(
                 value: offline,
-                onChanged: (value) {
-                  ref.read(forceOfflineProvider.notifier).state = value;
-                },
+                onChanged: (value) =>
+                    ref.read(forceOfflineProvider.notifier).state = value,
               );
             },
           ),
@@ -124,34 +123,7 @@ class NotesPage extends ConsumerWidget {
           IconButton(
             tooltip: 'Sinkronisasi',
             icon: const Icon(Icons.sync),
-            onPressed: () async {
-              try {
-                final count = await syncNotes(
-                  ref.read(noteRepositoryProvider),
-                  offline: ref.read(forceOfflineProvider),
-                );
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        count == 0
-                            ? 'Tidak ada catatan yang perlu disinkronkan'
-                            : '$count catatan berhasil disinkronkan',
-                      ),
-                    ),
-                  );
-                }
-              } on StateError catch (error) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error.message)),
-                  );
-                }
-              }
-
-              ref.invalidate(notesProvider);
-            },
+            onPressed: () => _onSync(context, ref),
           ),
         ],
       ),
@@ -162,18 +134,18 @@ class NotesPage extends ConsumerWidget {
           if (items.isEmpty) {
             return const Center(child: Text('Belum ada catatan'));
           }
-
           return ListView.builder(
             itemCount: items.length,
             itemBuilder: (context, index) {
               final note = items[index];
-
               return NoteTile(
                 note: note,
                 onTap: () => context.push('/note/${note.id}'),
                 onDelete: note.id == null
                     ? () {}
-                    : () => ref.read(notesProvider.notifier).deleteNote(note.id!),
+                    : () => ref
+                        .read(notesProvider.notifier)
+                        .deleteNote(note.id!),
               );
             },
           );

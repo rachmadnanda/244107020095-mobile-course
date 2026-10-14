@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/local/note.dart';
-import 'notes_page.dart';
+import '../providers/notes_providers.dart';
 
-final noteByIdProvider = FutureProvider.family<Note?, int>((ref, id) {
-  return ref.watch(noteRepositoryProvider).fetchNote(id);
-});
-
+/// Halaman detail catatan. Hanya membaca state dari provider.
 class NoteDetailPage extends ConsumerWidget {
   const NoteDetailPage({required this.noteId, super.key});
 
@@ -26,7 +22,6 @@ class NoteDetailPage extends ConsumerWidget {
           if (value == null) {
             return const Center(child: Text('Catatan tidak ditemukan'));
           }
-
           return Padding(
             padding: const EdgeInsets.all(16),
             child: Column(

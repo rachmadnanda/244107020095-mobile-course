@@ -1,165 +1,144 @@
-# AI Challenge — Local Storage
+# AI Challenge — Refactor ke Clean Architecture (fitur notes + settings)
 
-## Prompt yang Digunakan
+Dokumen ini merekam proses AI Challenge untuk codelab Week 7: prompt, output
+awal AI (draf usulan), verifikasi terhadap checklist, tabel usulan-vs-keputusan
+final, dan alasan teknis.
 
-> Aplikasi Flutter Offline Notes: CRUD catatan + preferensi tema.  
-> Bandingkan SharedPreferences, Hive, sqflite (SQLite), dan Drift untuk dua kebutuhan ini.  
-> Kriteria: kompleksitas query, kebutuhan relasi, reaktivitas (stream), type-safety, ukuran boilerplate, dan kemudahan testing.  
-> Beri rekomendasi final dalam satu tabel. Tunjukkan skema untuk 1000+ catatan dan jelaskan trade-off setiap pilihan.
+- Prompt: [§1](#1-prompt-yang-diberikan)
+- Output awal AI: [§2](#2-output-awal-ai-ringkasan)
+- Tabel usulan vs keputusan: [§3](#3-tabel-usulan-vs-keputusan-final)
+- Verifikasi checklist + grep: [§4](#4-ai-verification-checklist)
+- Keputusan & alasan: [§5](#5-keputusan-final--alasan-teknis)
 
-## Perbandingan Storage
+Implementasi final: `lib/features/` + `lib/core/`.
 
-| Storage | Kompleksitas Query | Relasi | Stream/Reaktivitas | Type-safety | Boilerplate | Testing | Rekomendasi |
-|---|---|---|---|---|---|---|---|
-| SharedPreferences | Sangat sederhana, key-value | Tidak mendukung | Tidak tersedia secara bawaan | Rendah | Sangat kecil | Mudah | Preferensi tema saja |
-| Hive | Sederhana, berbasis box | Terbatas/tidak relasional | Tidak sekuat database reaktif | Sedang, bergantung adapter | Kecil-sedang | Cukup mudah | Alternatif untuk data sederhana |
-| sqflite/SQLite | Mendukung query SQL kompleks | Mendukung relasi dan indeks | Tidak otomatis; perlu trigger/polling/StreamController | Sedang; model dan SQL manual | Sedang | Baik dengan database test | Catatan offline |
-| Drift | SQL kompleks dengan API terstruktur | Mendukung relasi dan indeks | `watch()` mendukung stream reaktif | Tinggi melalui code generation | Besar | Sangat baik dengan database test | Catatan kompleks/reaktif |
+---
 
-## Keputusan Final
-
-- **Preferensi tema:** `SharedPreferences`, karena hanya menyimpan nilai sederhana seperti `light`, `dark`, atau `system`.
-- **Data catatan:** `SQLite` melalui `sqflite`, karena mendukung CRUD, pencarian, pengurutan, indeks, dan data dalam jumlah besar.
-- **Drift** merupakan alternatif yang lebih type-safe dan reaktif, tetapi boilerplate dan setup code generation lebih besar.
-- Daftar catatan **tidak disimpan di SharedPreferences** karena penyimpanan koleksi besar sebagai JSON rapuh, sulit dicari, dan tidak efisien.
-
-## Skema SQLite untuk 1000+ Catatan
+## 1. Prompt yang diberikan
 
 ```text
-notes
-├── id            INTEGER PRIMARY KEY AUTOINCREMENT
-├── title         TEXT NOT NULL
-├── body          TEXT NOT NULL
-├── created_at    INTEGER NOT NULL
-├── updated_at    INTEGER NOT NULL
-├── dirty         INTEGER NOT NULL DEFAULT 1
-└── deleted       INTEGER NOT NULL DEFAULT 0
-
-Index:
-├── idx_notes_updated_at ON notes(updated_at)
-└── idx_notes_dirty ON notes(dirty)
+Project Flutter saya: week5_offline_notes (catatan offline + settings dark mode).
+Kondisi kini: folder lib/{data, pages, widgets}, repository tercampur dengan
+implementasi, provider DI tersebar di file halaman, entity dan model jadi satu
+kelas, exception mentah mencapai UI.
+Tugas:
+1. Usulkan struktur feature-first Clean Architecture (presentation/domain/data)
+   untuk fitur notes (dan settings).
+2. Untuk tiap file lama, sebutkan tujuan barunya (pindah/pecah/hapus).
+3. Tandai bagian yang over-engineering bila diterapkan ke CRUD sederhana,
+   dan kapan use case benar-benar dibutuhkan vs repository langsung.
+4. Tunjukkan wiring DI dengan Riverpod (tanpa package DI tambahan).
+Jelaskan trade-off setiap keputusan.
 ```
 
-Contoh SQL:
+## 2. Output awal AI (ringkasan)
 
-```sql
-CREATE TABLE notes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  body TEXT NOT NULL,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL,
-  dirty INTEGER NOT NULL DEFAULT 1,
-  deleted INTEGER NOT NULL DEFAULT 0
-);
+AI mengusulkan struktur feature-first berikut. **Draf ini diverifikasi dulu**
+(checklist §4) sebelum diterapkan — bukan langsung dipakai.
 
-CREATE INDEX idx_notes_updated_at
-ON notes(updated_at);
-
-CREATE INDEX idx_notes_dirty
-ON notes(dirty);
+```text
+lib/
+├── core/
+│   ├── failures.dart
+│   ├── result.dart            # wrapper Either<Failure, T> sendiri
+│   └── usecase.dart           # abstract class UseCase<Params, Result>
+├── features/
+│   ├── notes/
+│   │   ├── domain/
+│   │   │   ├── entities/note.dart
+│   │   │   ├── repositories/note_repository.dart
+│   │   │   └── usecases/   # get, get_by_id, add, delete, count_dirty, mark_synced, sync  (7 use case)
+│   │   ├── data/
+│   │   │   ├── models/note_model.dart
+│   │   │   ├── datasources/notes_local_data_source.dart   # lapisan tambahan
+│   │   │   └── repositories/note_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── providers/notes_providers.dart
+│   │       └── pages/...
+│   └── settings/
+│       ├── domain/entities/settings.dart + usecases/...   # entity + use case untuk prefs
+│       ├── data/...
+│       └── presentation/...
 ```
 
-Kolom `dirty` menandai data lokal yang belum tersinkronisasi. Kolom `updated_at` digunakan untuk menentukan perubahan terbaru saat sinkronisasi. Kolom `deleted` dapat digunakan sebagai tombstone agar penghapusan juga dapat disinkronkan.
+## 3. Tabel usulan vs keputusan final
 
-## Trade-off
+| # | Usulan AI | Keputusan final | Alasan singkat |
+| --- | --- | --- | --- |
+| 1 | 7 use case untuk tiap operasi CRUD (get, getById, add, delete, countDirty, markSynced, sync) | **3 use case**: `GetNotes`, `AddNote`, `SyncNotes`. Sisanya (fetchNote, deleteNote, countDirty, markAllSynced) langsung repository → notifier | Use case per CRUD satu-baris = over-engineering; lihat §5.2 |
+| 2 | Wrapper `Result`/`Either` sendiri (`core/result.dart`) + `core/usecase.dart` abstract base | **Record Dart** `(value, failure)` bawaan bahasa; tanpa base class use case | Behavior sama, lebih sedikit kode & dependensi; record sudah idiomatik Dart 3 |
+| 3 | Lapis `datasources/notes_local_data_source.dart` terpisah dari repository impl | **Digabung**: `NoteRepositoryImpl` langsung pegang `Database` | Untuk CRUD SQLite sederhana, data source terpisah tidak menambah nilai |
+| 4 | Fitur settings punya entity + use case sendiri | **Tanpa entity/use case** — hanya repo (`PrefsRepository`) di data + provider di presentation | Settings hanya read/write prefs; domain kosong = pura-pura berlapis |
+| 5 | `Failure` + return record di repository | **Diterapkan persis** | Selaras dengan kontrak domain & kebutuhan test |
+| 6 | Interface repository di domain, impl di data | **Diterapkan** | Syarat dependency rule |
+| 7 | Entity bebas mapping, `NoteModel` extends `Note` | **Diterapkan** | Mapping hanya di model |
+| 8 | Wiring DI terpusat di satu file provider per fitur | **Diterapkan** (`notes_providers.dart`, `settings_providers.dart`) | Widget tidak `new Repository()` |
+| 9 | `core/format.dart` untuk formatting murni | **Ditambah** (Refactoring Challenge) | Fungsi format tanggal/parse bisa diuji tanpa widget |
 
-### SharedPreferences
+## 4. AI Verification Checklist
 
-Kelebihan:
+| # | Item verifikasi | Hasil | Bukti |
+| --- | --- | --- | --- |
+| 1 | Interface repository di domain, implementasi di data? | ✅ | `features/notes/domain/repositories/note_repository.dart` (abstract) vs `features/notes/data/repositories/note_repository_impl.dart` |
+| 2 | Domain bebas import Flutter/Dio/SQLite/Firebase? | ✅ | Grep 2 di bawah → NOL |
+| 3 | AI membuat use case untuk tiap CRUD satu-baris? | ⚠️ **Ya, 7 buah → disederhanakan jadi 3** | Usulan #1 ditolak sebagian; alasan §5.2 |
+| 4 | Entity bebas mapping (`toMap`/`fromMap` hanya di model)? | ✅ | `domain/entities/note.dart` murni; `data/local/note_model.dart` yang mapping |
+| 5 | Wiring DI terpusat di provider, widget tidak `new Repository()`? | ✅ | Grep 3 di bawah → NOL |
+| 6 | Keputusan final boleh berbeda dari saran AI selama berargumen | ✅ | Lihat §3 & §5 |
 
-- Instalasi dan penggunaan sederhana.
-- Cocok untuk preferensi kecil.
-- Tidak membutuhkan skema database.
+### Hasil tiga grep verifikasi
 
-Kekurangan:
+```text
+# 1. Presentation steril dari data mentah
+rg "Dio\(|openDatabase|getDatabasesPath|FlutterSecureStorage|SharedPreferences\.getInstance|jsonDecode" lib/features/*/presentation
+→ NOL
 
-- Tidak cocok untuk ribuan catatan.
-- Tidak mendukung query, relasi, indeks, atau transaksi kompleks.
-- Tidak menyediakan stream perubahan bawaan.
+# 2. Domain steril dari framework & package
+rg "import 'package:flutter|import 'package:dio|import 'package:sqflite|import 'package:firebase|package:shared_preferences" lib/features/*/domain lib/core
+→ NOL
 
-### Hive
-
-Kelebihan:
-
-- Cepat dan ringan.
-- API sederhana.
-- Cocok untuk penyimpanan object atau cache sederhana.
-
-Kekurangan:
-
-- Query dan relasi tidak sekuat SQLite.
-- Membutuhkan adapter untuk object tertentu.
-- Struktur data kompleks dapat lebih sulit dimigrasikan.
-
-### sqflite/SQLite
-
-Kelebihan:
-
-- Stabil dan cocok untuk data besar.
-- Mendukung SQL, transaksi, relasi, dan indeks.
-- Mudah digunakan untuk kebutuhan CRUD dan sinkronisasi offline.
-
-Kekurangan:
-
-- SQL dan pemetaan model harus ditulis manual.
-- Tidak memiliki stream reaktif secara otomatis.
-- Migrasi skema perlu dikelola sendiri.
-
-### Drift
-
-Kelebihan:
-
-- Type-safe.
-- Mendukung query kompleks dan relasi.
-- Memiliki `watch()` untuk stream data reaktif.
-- Testing database lebih terstruktur.
-
-Kekurangan:
-
-- Membutuhkan code generation.
-- Boilerplate dan konfigurasi lebih banyak.
-- Migrasi tetap perlu direncanakan.
-
-## Verifikasi AI
-
-| Pemeriksaan | Temuan |
-|---|---|
-| Apakah daftar catatan disimpan di SharedPreferences? | Ditolak. SharedPreferences hanya digunakan untuk preferensi tema. |
-| Apakah skema mendukung antrean sinkronisasi? | Ya, menggunakan `dirty`, `updated_at`, dan `deleted`. |
-| Apakah klaim real-time menggunakan stream? | Hanya Drift yang menyediakan `watch()` secara langsung. sqflite memerlukan implementasi tambahan. |
-| Apakah boilerplate masuk akal? | SharedPreferences paling kecil, sqflite sedang, dan Drift paling besar karena code generation. |
-| Keputusan akhir | SharedPreferences untuk preferensi dan SQLite/sqflite untuk catatan. |
-
-## Hasil Testing
-
-Perintah instalasi yang digunakan:
-
-```bash
-flutter pub add shared_preferences
-flutter pub add sqflite
-flutter pub add path
+# 3. Widget tidak menginstansiasi repository (DI bocor)
+rg "NoteRepository\(|PrefsRepository\(|NoteRepositoryImpl\(" lib/features/*/presentation/pages lib/features/*/presentation/widgets
+→ NOL
 ```
 
-Hasil pengujian yang harus dicatat:
+## 5. Keputusan final & alasan teknis
 
-- Preferensi tema dapat disimpan dan dibaca kembali.
-- Catatan dapat ditambah, dibaca, dan dihapus setelah aplikasi dimulai ulang.
-- Catatan dengan `dirty = 1` muncul sebagai belum tersinkronisasi.
-- Query tetap berjalan untuk data 1000+ catatan.
-- Migrasi database tidak menghapus data lama.
+### 5.1 Interface repository di domain (diterapkan)
 
-## Kesimpulan
+Kontrak ditentukan oleh kebutuhan domain, sehingga interface harus tinggal di
+domain. Bila dibalik (interface di data), domain akan bergantung ke luar —
+melanggar dependency rule dan membuat domain tidak bisa diuji dengan fake yang
+mengimplementasikan kontraknya sendiri.
 
-Kombinasi `SharedPreferences + SQLite` dipilih karena sesuai dengan karakteristik masing-masing data. Preferensi tema berukuran kecil dan berbentuk key-value, sedangkan catatan membutuhkan query, indeks, transaksi, dan dukungan untuk antrean sinkronisasi offline.
+### 5.2 Use case hanya saat ada logika (AI yang usulkan 7 disederhanakan jadi 3)
 
-## Verifikasi Refactoring Tahap 7
+Use case bernilai bila operasi **menggabungkan >1 repository atau punya aturan
+bisnis**. Di fitur ini:
 
-- Baris daftar catatan diekstrak ke widget `NoteTile` dan menampilkan badge
-  `Belum tersinkron` saat `dirty` bernilai benar.
-- Cache posts dan `syncNotes` dipusatkan di `lib/data/sync.dart`; file lama
-  `post_cache.dart` hanya mempertahankan export kompatibilitas.
-- Detail catatan tersedia melalui GoRouter pada `/note/:id` dan mengambil data
-  langsung dari repository lokal melalui provider family.
-- `test/note_test.dart` menguji mapping null-safe serta provider dengan
-  `FakeNoteRepository`, tanpa membuka SQLite.
+- `SyncNotes` → menggabungkan `countDirty` + `markAllSynced` **dan** aturan
+  "tolak saat offline" → **layak jadi use case**.
+- `GetNotes`, `AddNote` → operasi dominan UI, dipakai presentation berulang →
+  use case tipis yang tetap memberi titik uji domain tanpa SQLite.
+- `deleteNote`, `fetchNote`, `countDirty`, `markAllSynced` → CRUD satu-baris →
+  **repository langsung ke notifier**; membuat use case hanya menambah file
+  tanpa menambah kejelasan.
+
+### 5.3 Record bawaan, bukan wrapper Either sendiri
+
+`({List<Note> notes, Failure? failure})` memberi sinyal sukses/gagal eksplisit
+tanpa melempar exception ke UI, dan tanpa membuat/menguji tipe `Either` sendiri.
+Pola kontraknya identik dengan `fpdart/dartz`, jadi migrasi mudah bila nanti
+diperlukan.
+
+### 5.4 Settings tanpa domain layer
+
+Settings hanya baca/tulis preferensi lokal. Memaksakan entity + use case di sini
+adalah over-engineering: domain-nya kosong dan tidak ada aturan bisnis. Cukup
+repo di data + provider di presentation, tetap mematuhi aturan dependensi.
+
+### 5.5 Repository impl langsung pegang `Database` (tanpa data source terpisah)
+
+Untuk satu sumber data lokal yang sederhana, memisah `NotesLocalDataSource`
+hanya menambah indireksi. Bila kelak ada remote + local + cache, lapisan data
+source baru layak ditambah — saat kebutuhannya nyata, bukan sekarang.

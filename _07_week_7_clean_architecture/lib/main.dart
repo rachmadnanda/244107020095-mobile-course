@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'data/prefs.dart';
-import 'pages/note_detail_page.dart';
-import 'pages/notes_page.dart';
-import 'pages/settings_page.dart';
+import 'features/notes/presentation/pages/note_detail_page.dart';
+import 'features/notes/presentation/pages/notes_page.dart';
+import 'features/settings/presentation/pages/settings_page.dart';
+import 'features/settings/presentation/providers/settings_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await PrefsRepository().markOpenedNow();
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -18,10 +17,7 @@ class MyApp extends ConsumerWidget {
 
   static final _router = GoRouter(
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const NotesPage(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const NotesPage()),
       GoRoute(
         path: '/note/:id',
         builder: (context, state) {
@@ -46,7 +42,7 @@ class MyApp extends ConsumerWidget {
     final darkMode = ref.watch(darkModeProvider).value ?? false;
 
     return MaterialApp.router(
-      title: 'Week 5 - Offline Notes',
+      title: 'Week 7 - Clean Architecture Notes',
       theme: ThemeData(
         colorSchemeSeed: Colors.indigo,
         brightness: Brightness.light,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../data/local/note.dart';
+import '../../domain/entities/note.dart';
 
+/// Widget kartu catatan. Murni presentasi — hanya menerima entity `Note`.
 class NoteTile extends StatelessWidget {
   const NoteTile({
     required this.note,

@@ -1,28 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/prefs.dart';
+import '../providers/settings_providers.dart';
 
-final prefsRepositoryProvider = Provider((ref) => PrefsRepository());
-
-final darkModeProvider = AsyncNotifierProvider<DarkModeNotifier, bool>(
-  DarkModeNotifier.new,
-);
-
-class DarkModeNotifier extends AsyncNotifier<bool> {
-  @override
-  Future<bool> build() => ref.watch(prefsRepositoryProvider).getDarkMode();
-
-  Future<void> toggle() async {
-    final next = !(state.value ?? false);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(prefsRepositoryProvider).setDarkMode(next);
-      return next;
-    });
-  }
-}
-
+/// Halaman pengaturan. Hanya membaca state dari provider.
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
@@ -41,16 +22,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _loadLastOpened() async {
     final prefs = ref.read(prefsRepositoryProvider);
-
     await prefs.markOpenedNow();
-
     final value = await prefs.getLastOpened();
-
     if (!mounted) return;
-
-    setState(() {
-      _lastOpened = value;
-    });
+    setState(() => _lastOpened = value);
   }
 
   @override
@@ -68,9 +43,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               title: const Text('Mode Gelap'),
               subtitle: const Text('Simpan preferensi tema secara lokal'),
               value: enabled,
-              onChanged: (_) {
-                ref.read(darkModeProvider.notifier).toggle();
-              },
+              onChanged: (_) =>
+                  ref.read(darkModeProvider.notifier).toggle(),
             ),
             const Divider(),
             ListTile(

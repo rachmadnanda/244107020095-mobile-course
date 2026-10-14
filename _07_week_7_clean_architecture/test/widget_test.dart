@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:_07_week_7_clean_architecture/data/local/note.dart';
-import 'package:_07_week_7_clean_architecture/widgets/note_tile.dart';
+import 'package:_07_week_7_clean_architecture/features/notes/domain/entities/note.dart';
+import 'package:_07_week_7_clean_architecture/features/notes/presentation/widgets/note_tile.dart';
 
 void main() {
   testWidgets('NoteTile menampilkan badge dirty', (tester) async {

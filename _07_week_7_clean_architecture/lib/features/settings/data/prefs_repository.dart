@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Repository preferensi lokal (SharedPreferences). Layer data untuk fitur
+/// settings. Mapping/penyimpanan hanya di sini.
 class PrefsRepository {
   static const _darkModeKey = 'dark_mode';
   static const _lastOpenedKey = 'last_opened_at';

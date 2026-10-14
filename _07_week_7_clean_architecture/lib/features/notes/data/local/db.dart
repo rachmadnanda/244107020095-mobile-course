@@ -1,6 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+/// Membuka database SQLite catatan (data source lokal).
 Future<Database> openNotesDb() async {
   final dir = await getDatabasesPath();
   return openDatabase(

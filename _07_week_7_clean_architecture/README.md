@@ -1,240 +1,82 @@
-# Laporan Praktikum Minggu 5 — Local Storage & Offline-First
+# Week 7 — Clean Architecture (Offline Notes)
 
-**Nama:** Rachmad Febriananda
-**Mata kuliah:** Pemrograman Mobile
-**Topik:** SharedPreferences, SQLite, repository, Riverpod, offline-first,
-testing, dan sinkronisasi
-**Project:** Offline Notes
+Refactor project **Minggu 5 (`week5_offline_notes`)** menjadi **Clean
+Architecture feature-first**. Bukan project baru — kode yang sudah jalan
+dipindahkan dan dipisahkan per layer. Versi "before" tetap utuh di folder
+`_05_week_5_local_storage_offline_first/`.
 
-## 1. Tujuan
+## Tujuan
 
-Praktikum ini bertujuan memahami pemilihan storage lokal dan membangun
-aplikasi Flutter yang tetap dapat dibaca dan ditulis tanpa internet. Codelab
-menargetkan kemampuan untuk:
+- Menerapkan prinsip SOLID dan separation of concerns pada kode Flutter nyata.
+- Menerapkan struktur feature-first dengan tiga layer: presentation / domain / data.
+- Membuktikan dependency rule (dependensi hanya mengarah ke dalam) lewat grep sterilitas.
+- Menguji use case dengan repository palsu tanpa SQLite/Dio/Firebase.
 
-- membedakan key-value, relasional, dan NoSQL embedded;
-- menyimpan preferensi dengan SharedPreferences;
-- menerapkan CRUD catatan dengan SQLite melalui repository;
-- menerapkan cache-first read, dirty flag, dan antrean sinkronisasi;
-- menampilkan loading, error, empty, dan success dengan Riverpod;
-- menguji model dan provider menggunakan repository palsu tanpa database asli.
+## Diagram layer & arah dependensi
 
-## 2. Deskripsi aplikasi
-
-Offline Notes adalah aplikasi catatan yang menyimpan data secara lokal.
-Preferensi tema dan waktu terakhir dibuka disimpan dengan
-`SharedPreferences`, sedangkan catatan disimpan di SQLite melalui `sqflite`.
-Daftar catatan diurutkan berdasarkan `updated_at` terbaru.
-
-Fitur yang dibuat:
-
-- tambah dan hapus catatan;
-- detail catatan melalui `/note/:id`;
-- toggle tema gelap/terang;
-- pencatatan waktu terakhir aplikasi dibuka;
-- badge `Belum tersinkron` untuk catatan `dirty`;
-- switch simulasi mode offline;
-- sinkronisasi simulasi dan penghitung catatan dirty;
-- cache-first untuk data bacaan;
-- state loading, error, empty, dan success;
-- unit test model, provider palsu, dan widget `NoteTile`.
-
-## 3. Praktikum 1 — Preferensi dengan SharedPreferences
-
-### Implementasi
-
-Seluruh akses key-value dipusatkan di
-[`lib/data/prefs.dart`](lib/data/prefs.dart) melalui `PrefsRepository`.
-Key yang digunakan:
-
-| Key | Nilai | Fungsi |
-|---|---|---|
-| `dark_mode` | `bool` | menyimpan tema gelap/terang |
-| `last_opened_at` | ISO-8601 `String` | menyimpan waktu terakhir dibuka |
-
-Provider `darkModeProvider` mengelola pembacaan dan perubahan preferensi.
-`main()` memanggil `markOpenedNow()` sebelum aplikasi ditampilkan, sedangkan
-[`settings_page.dart`](lib/pages/settings_page.dart) menampilkan toggle dan
-waktu terakhir dibuka.
-
-### Hasil
-
-Tema dapat diubah, disimpan, dan tetap terbaca ketika aplikasi dijalankan
-kembali. Waktu terakhir dibuka tampil dalam format ISO-8601.
-
-## 4. Praktikum 2 — Model, database, dan repository SQLite
-
-### Model
-
-[`lib/data/local/note.dart`](lib/data/local/note.dart) memiliki field:
-
-| Field | Tipe | Keterangan |
-|---|---|---|
-| `id` | `int?` | primary key SQLite |
-| `title` | `String` | judul catatan |
-| `body` | `String` | isi catatan |
-| `updatedAt` | `DateTime` | waktu perubahan terakhir |
-| `dirty` | `bool` | belum atau sudah disinkronkan |
-
-`toMap()` mengubah `dirty` menjadi `0/1`, sedangkan `fromMap()` menggunakan
-nilai default yang aman jika field tidak tersedia.
-
-### Skema database
-
-[`lib/data/local/db.dart`](lib/data/local/db.dart) membuat tabel `notes` dan
-`cached_posts`:
-
-```sql
-CREATE TABLE notes(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  body TEXT NOT NULL DEFAULT '',
-  updated_at TEXT NOT NULL,
-  dirty INTEGER NOT NULL DEFAULT 0
-);
+```
+presentation (widget, notifier, router)
+      |
+      v  bergantung ke
+domain (entity, repository interface, use case, failure)
+      ^
+      |  diimplementasikan oleh
+data (model, repository impl, SQLite, SharedPreferences)
 ```
 
-Untuk kebutuhan produksi, migrasi dilakukan dengan menaikkan `version` dan
-menambahkan `onUpgrade`, bukan menjalankan `onCreate` ulang.
+Aturan emas: **dependensi hanya mengarah ke dalam.** `domain` tidak mengimpor
+Flutter, Dio, SQLite, Firebase, atau SharedPreferences — sehingga logika bisnis
+bisa diunit-test murni.
 
-### Repository
+## Struktur folder
 
-[`lib/data/repositories/note_repository.dart`](lib/data/repositories/note_repository.dart)
-menjadi satu-satunya pintu ke SQLite. Method yang digunakan:
-
-- `fetchNotes()` dengan `ORDER BY updated_at DESC`;
-- `fetchNote(id)` untuk halaman detail;
-- `addNote()` dengan `dirty = true`;
-- `deleteNote(id)`;
-- `countDirty()`;
-- `markAllSynced()`.
-
-UI tidak memanggil SQLite secara langsung. UI hanya berkomunikasi melalui
-provider Riverpod dan repository.
-
-## 5. Praktikum 3 — Offline-first dan sinkronisasi
-
-### Cache-first read
-
-Data lokal dibaca terlebih dahulu sehingga halaman tidak blank ketika offline.
-Cache posts dan fungsi sinkronisasi dipusatkan di
-[`lib/data/sync.dart`](lib/data/sync.dart). Data remote pada codelab
-disimulasikan; mekanisme yang diuji adalah membaca cache, menyimpan hasil,
-dan melakukan invalidasi provider.
-
-### Dirty flag
-
-Catatan baru diberi `dirty = 1`. `syncNotes()` menghitung catatan dirty,
-menunggu simulasi respons server, lalu memanggil `markAllSynced()` hanya jika
-proses dianggap berhasil. Saat mode offline aktif, sinkronisasi ditolak dengan
-pesan yang jelas dan dirty tetap dipertahankan.
-
-### Aturan konflik
-
-Aplikasi menggunakan **last-write-wins** berdasarkan `updated_at`. Versi
-dengan waktu perubahan paling baru dipertahankan. Jika kebutuhan berkembang
-menjadi retry per operasi, urutan operasi, dan pelacakan error, dirty flag akan
-diganti atau dilengkapi tabel `outbox`.
-
-## 6. AI Challenge
-
-### Prompt
-
-> Aplikasi Flutter Offline Notes: CRUD catatan + preferensi tema. Bandingkan
-> SharedPreferences, Hive, sqflite (SQLite), dan Drift untuk dua kebutuhan ini.
-> Kriteria: kompleksitas query, kebutuhan relasi, reaktivitas (stream),
-> type-safety, ukuran boilerplate, dan kemudahan testing. Beri rekomendasi
-> final: mana untuk preferensi, mana untuk catatan, beserta alasannya dalam
-> 1 tabel. Tunjukkan skema tabel/kotak untuk 1000+ catatan. Jelaskan trade-off
-> setiap pilihan.
-
-Output, verifikasi, dan skema lengkap tersedia di
-[`docs/ai-challenge.md`](docs/ai-challenge.md).
-
-### Perbandingan final
-
-| Storage | Query/relasi | Reaktivitas | Type-safety | Boilerplate | Keputusan |
-|---|---|---|---|---|---|
-| SharedPreferences | key-value sederhana, tanpa relasi | tidak ada stream bawaan | rendah | sangat kecil | preferensi saja |
-| Hive | box dan query sederhana | terbatas | sedang dengan adapter | kecil-sedang | alternatif cache/object |
-| sqflite/SQLite | SQL, indeks, transaksi, relasi | perlu invalidasi/stream manual | sedang | sedang | catatan aplikasi ini |
-| Drift | SQL terstruktur dan relasi | `watch()` bawaan | tinggi, code generation | besar | alternatif aplikasi lebih kompleks |
-
-### Verifikasi keputusan
-
-- Daftar catatan **tidak** ditempatkan di SharedPreferences karena koleksi
-  JSON besar sulit dicari, diurutkan, dimigrasikan, dan diperbarui sebagian.
-- Skema catatan memakai `dirty` dan `updated_at`, bukan CRUD polos saja.
-- Klaim real-time hanya diterima jika didukung stream seperti Drift `watch()`.
-  `sqflite` pada project ini memakai invalidasi provider.
-- Setelah instalasi, SharedPreferences memiliki boilerplate paling kecil,
-  sqflite sedang, dan Drift paling besar karena code generation.
-- Keputusan akhir: SharedPreferences untuk preferensi, SQLite untuk catatan.
-
-## 7. Refactoring, testing, dan error umum
-
-### Refactoring
-
-1. Baris catatan diekstrak menjadi [`NoteTile`](lib/widgets/note_tile.dart)
-   dengan badge dirty.
-2. Cache posts dan `syncNotes` dipindahkan ke
-   [`lib/data/sync.dart`](lib/data/sync.dart).
-3. Halaman detail [`NoteDetailPage`](lib/pages/note_detail_page.dart)
-   membaca ulang catatan dari repository lokal melalui provider family, bukan
-   memakai object dari state halaman list.
-4. Routing didefinisikan dengan GoRouter: `/`, `/note/:id`, dan `/settings`.
-
-### Testing
-
-[`test/note_test.dart`](test/note_test.dart) menguji:
-
-- `Note.fromMap()` aman ketika field map hilang;
-- flag dirty bertahan setelah serialisasi dan deserialisasi;
-- provider berhasil mengambil data dari `FakeNoteRepository` tanpa SQLite.
-
-[`test/widget_test.dart`](test/widget_test.dart) menguji badge
-`Belum tersinkron` pada `NoteTile`.
-
-Hasil terakhir:
-
-```text
-flutter test
-00:00 +4: All tests passed!
+```
+lib/
+├── core/
+│   ├── failures.dart          # Failure domain (murni Dart)
+│   └── format.dart            # format tanggal/parse murni (bisa diuji)
+├── features/
+│   ├── notes/
+│   │   ├── domain/
+│   │   │   ├── entities/note.dart                # entity murni (tanpa mapping)
+│   │   │   ├── repositories/note_repository.dart  # INTERFACE
+│   │   │   └── usecases/{get_notes, add_note, sync_notes}.dart
+│   │   ├── data/
+│   │   │   ├── local/{db.dart, note_model.dart}  # mapping hanya di model
+│   │   │   └── repositories/note_repository_impl.dart
+│   │   └── presentation/
+│   │       ├── providers/notes_providers.dart     # SATU-SATUNYA wiring DI
+│   │       ├── pages/{notes_page, note_detail_page}.dart
+│   │       └── widgets/note_tile.dart
+│   └── settings/
+│       ├── data/prefs_repository.dart
+│       └── presentation/
+│           ├── providers/settings_providers.dart
+│           └── pages/settings_page.dart
+└── main.dart
 ```
 
-`flutter build apk --debug` juga berhasil. `flutter analyze` hanya melaporkan
-info penamaan package `_05_week_5_local_storage_offline_first`, bukan error
-kompilasi.
+## Fitur utama
 
-### Error yang ditemukan dan penyelesaiannya
+1. **Fitur notes** — entity murni `Note`, kontrak `NoteRepository` di domain,
+   implementasi `NoteRepositoryImpl` (SQLite) di data, use case
+   `GetNotes` / `AddNote` / `SyncNotes`, wiring DI di `notes_providers.dart`.
+2. **Fitur settings** — repo `PrefsRepository` di data + provider di
+   presentation (tanpa domain layer, lihat AI Challenge §5.4).
+3. **Kontrak eksplisit** — repository/use case mengembalikan record
+   `(value, failure)`; exception sumber data diubah jadi `Failure` ramah pengguna.
+4. **Entity vs model** — mapping SQLite hanya di `NoteModel`; entity bebas mapping.
 
-Pada proses awal, `note_detail_page.dart` gagal dikompilasi karena
-`noteRepositoryProvider` belum di-import. Import provider ditambahkan.
-Test awal juga gagal karena `ListTile` belum memiliki ancestor `Material`;
-test diperbaiki dengan membungkus `NoteTile` dalam `Scaffold`.
+## Stack teknologi
 
-Error `MissingPluginException` dihindari dengan melakukan full run setelah
-menambah plugin, bukan hanya hot reload. Perubahan skema database harus
-menaikkan versi dan mengimplementasikan `onUpgrade`.
+| Komponen | Paket |
+| --- | --- |
+| State management / DI | `flutter_riverpod` |
+| Navigasi | `go_router` |
+| Database lokal | `sqflite` |
+| Preferensi | `shared_preferences` |
 
-## 8. Tugas akhir / Industry Challenge
-
-### Checklist implementasi
-
-| Requirement | Implementasi | Status |
-|---|---|---|
-| Tema dan terakhir dibuka | SharedPreferences + settings page | Selesai |
-| CRUD persisten | sqflite + `NoteRepository` | Selesai |
-| Urutan terbaru | `updated_at DESC` | Selesai |
-| Cache-first | local cache dan repository | Selesai |
-| Dirty flag + sync | `syncNotes`, `countDirty`, `markAllSynced` | Selesai |
-| Konflik eksplisit | last-write-wins berdasarkan `updated_at` | Selesai |
-| Mode pesawat | switch `Offline` dan catatan lokal | Selesai |
-| Minimal dua test | model, provider palsu, dan widget | Selesai |
-| Dokumentasi AI | prompt, tabel, skema, verifikasi | Selesai |
-| Struktur portfolio | `lib/`, `test/`, `docs/`, `README.md`, `screenshots/` | Selesai |
-
-### Cara menjalankan
+## Cara menjalankan
 
 ```bash
 flutter pub get
@@ -243,84 +85,78 @@ flutter test
 flutter run
 ```
 
-Untuk demo:
+## Bukti dependency rule (tiga grep sterilitas)
 
-1. buka aplikasi dan tambahkan catatan;
-2. aktifkan switch `Offline`;
-3. tambahkan atau baca catatan tanpa koneksi;
-4. amati badge `Belum tersinkron`;
-5. matikan switch offline;
-6. tekan tombol sinkronisasi dan amati badge hilang.
+Semua menghasilkan **NOL**:
 
-## 9. Galeri screenshot berdasarkan waktu
+```text
+# 1. Presentation steril dari data mentah
+rg "Dio\(|openDatabase|getDatabasesPath|FlutterSecureStorage|SharedPreferences\.getInstance|jsonDecode" lib/features/*/presentation
+→ NOL
 
-Screenshot berikut adalah bukti proses dari praktikum hingga tugas akhir.
-Nama file menyimpan waktu pengambilan, sehingga urutannya dipertahankan dari
-yang paling awal sampai paling akhir.
+# 2. Domain steril dari framework & package
+rg "import 'package:flutter|import 'package:dio|import 'package:sqflite|import 'package:firebase|package:shared_preferences" lib/features/*/domain lib/core
+→ NOL
 
-| Tahap/keterangan | Bukti |
-|---|---|
-| Kode repository preferensi SharedPreferences | ![13:30:33](screenshots/satty-2026-09-28_13:30:33.png) |
-| Halaman Pengaturan, toggle tema terang | ![13:41:18](screenshots/satty-2026-09-28_13:41:18.png) |
-| Toggle tema gelap berhasil berubah | ![13:42:06](screenshots/satty-2026-09-28_13:42:06.png) |
-| Waktu terakhir dibuka tampil | ![13:52:45](screenshots/satty-2026-09-28_13:52:45.png) |
-| Preferensi tersimpan setelah dibuka kembali | ![13:53:34](screenshots/satty-2026-09-28_13:53:34.png) |
-| Praktikum SQLite: daftar masih kosong | ![14:17:41](screenshots/satty-2026-09-28_14:17:41.png) |
-| Catatan SQLite berhasil ditambahkan | ![14:18:20](screenshots/satty-2026-09-28_14:18:20.png) |
-| Dialog tambah catatan dan input form | ![14:18:44](screenshots/satty-2026-09-28_14:18:44.png) |
-| Error runtime saat proses awal, menjadi bahan debugging | ![14:19:48](screenshots/satty-2026-09-28_14:19:48.png) |
-| Dua catatan tersimpan secara persisten | ![14:23:10](screenshots/satty-2026-09-28_14:23:10.png) |
-| Mode Offline aktif, badge dirty terlihat | ![15:31:19](screenshots/satty-2026-09-28_15:31:19.png) |
-| Daftar tetap dapat dibaca saat offline | ![15:32:02](screenshots/satty-2026-09-28_15:32:02.png) |
-| Catatan lokal tetap tampil dalam mode offline | ![15:32:23](screenshots/satty-2026-09-28_15:32:23.png) |
-| Setelah sync, catatan tetap tersedia dan badge berubah | ![15:32:33](screenshots/satty-2026-09-28_15:32:33.png) |
-| Hasil akhir: mode gelap, settings, detail, dan catatan offline | ![16:28:46](screenshots/satty-2026-09-28_16:28:46.png) |
+# 3. Widget tidak menginstansiasi repository (DI bocor)
+rg "NoteRepository\(|PrefsRepository\(|NoteRepositoryImpl\(" lib/features/*/presentation/pages lib/features/*/presentation/widgets
+→ NOL
+```
 
-## 10. Refleksi
+## Behavior identik (before / after)
 
-### Mengapa daftar catatan tidak boleh disimpan di SharedPreferences?
+Aplikasi berjalan sama persis seperti sebelum refactor (tambah/hapus catatan,
+detail, sinkronisasi, mode gelap). Bukti screenshot before/after ada di folder
+[`screenshots/`](screenshots/) — folder `_05_...` adalah versi before.
 
-SharedPreferences dirancang untuk nilai kecil seperti boolean, string, atau
-angka. Jika seluruh daftar disimpan sebagai satu JSON besar, update satu
-catatan harus membaca dan menulis ulang seluruh koleksi. Query pencarian,
-pengurutan, transaksi, indeks, migrasi, dan pemulihan data menjadi rapuh.
-Karena itu daftar catatan menggunakan SQLite.
+## AI Challenge
 
-### Kapan cache-first cukup?
+Proses lengkap (prompt, output awal AI, tabel usulan-vs-keputusan-final, dan
+hasil grep) ada di [`docs/ai-challenge.md`](docs/ai-challenge.md). Audit layer
+project lama ada di [`docs/praktikum1-audit.md`](docs/praktikum1-audit.md).
 
-Cache-first cocok untuk data yang harus segera tersedia dan masih berguna
-ketika offline, seperti catatan. Untuk harga real-time, saldo, atau stok,
-data lama dapat menyebabkan keputusan yang salah; kebutuhan tersebut lebih
-tepat menggunakan network-first atau stale-while-revalidate dengan penanda
-waktu dan status kesegaran.
+Ringkasan penyederhanaan atas usulan AI: 7 use case → 3, wrapper `Either`
+sendiri → record bawaan, data source terpisah → digabung ke repository impl, dan
+settings tanpa domain layer.
 
-### Bagaimana dirty flag menjadi antrean sync?
+## Hasil yang dicapai
 
-`dirty = 1` adalah antrean minimal: query memilih semua catatan yang belum
-terkirim, lalu masing-masing ditandai bersih setelah server mengembalikan
-respons sukses. Karena proses memakai `Future` dan tidak memblokir frame UI,
-pengguna tetap dapat membaca dan menulis. Tabel outbox diperlukan jika create,
-update, dan delete harus dilacak sebagai operasi terpisah, diurutkan, di-retry,
-dan dicatat error-nya.
+- `flutter analyze`: 0 error / 0 warning (hanya info `package_names` bawaan
+  konvensi penamaan folder repo).
+- `flutter test`: 8 test lulus — entity/model round-trip, use case sukses & gagal
+  dengan repository palsu (`GetNotes`, `SyncNotes`), provider dengan fake repo,
+  dan widget test.
+- Tiga grep sterilitas: **NOL** semua.
 
-### Bagian AI yang ditolak
+## Refleksi
 
-Rekomendasi utama AI tidak ditolak: SharedPreferences memang sesuai untuk
-preferensi dan SQLite sesuai untuk catatan. Yang ditolak adalah anggapan bahwa
-sqflite otomatis real-time; sqflite tidak menyediakan `watch()` bawaan.
-Project ini menggunakan invalidasi provider, sedangkan Drift lebih tepat jika
-stream reaktif dan type-safety menjadi prioritas utama.
+**1. Mengapa interface repository harus tinggal di domain, bukan di data? Apa yang rusak bila dibalik?**
 
-## 11. Kesimpulan
+Interface menggambarkan **kebutuhan domain**, bukan cara mengambil data. Bila
+ditaruh di data, domain harus mengimpor layer di atasnya → dependensi mengarah
+ke luar (melanggar dependency rule) dan domain tidak bisa diuji dengan fake yang
+mengimplementasikan kontraknya sendiri. Dengan interface di domain, data
+"memenuhi" kontrak domain; arah panah tetap ke dalam.
 
-Kombinasi SharedPreferences + SQLite memenuhi kebutuhan aplikasi Offline Notes:
-storage sederhana untuk preferensi, database relasional untuk catatan, serta
-dirty flag untuk sinkronisasi tertunda. Riverpod menjaga UI tidak bergantung
-langsung pada platform storage, repository memusatkan akses data, dan test
-repository palsu memastikan provider dapat diuji tanpa database sungguhan.
+**2. Kapan use case benar-benar dibutuhkan, dan kapan repository langsung ke notifier sudah cukup?**
 
-## Referensi
+Use case dibutuhkan saat operasi **menggabungkan >1 repository atau punya aturan
+bisnis** (validasi, sorting, sinkron). Contoh di project ini: `SyncNotes`
+(gabung `countDirty` + `markAllSynced` + aturan offline). Untuk CRUD satu-baris
+(`deleteNote`, `fetchNote`) repository langsung ke notifier sudah cukup — use
+case hanya menambah file tanpa menambah kejelasan.
 
-- [Codelab resmi Minggu 5](https://jti-polinema.github.io/flutter-codelab/05-minggu-5-local-storage-offline-first/index.html#0)
-- [Dokumentasi AI Challenge](docs/ai-challenge.md)
-- [Dokumentasi offline-first](docs/offline-first.md)
+**3. Apa biaya over-engineering (use case per CRUD satu-baris) bagi tim kecil? Kapan biayanya sepadan?**
+
+Biayanya: lebih banyak file/indireksi untuk dipahami, boilerplate tiap operasi,
+dan melambatkan perubahan kecil. Untuk tim kecil dengan CRUD sederhana itu tidak
+sepadan. Biayanya sepadan bila logika bisnis kompleks, banyak sumber data
+(remote + local + cache), atau tim besar yang butuh batas kontrak yang tegas.
+
+**4. Bagian mana dari usulan AI yang Anda tolak atau sederhanakan, dan mengapa?**
+
+Detail di [`docs/ai-challenge.md`](docs/ai-challenge.md). Ringkasnya: menolak
+use case per CRUD satu-baris (7 → 3), menolak wrapper `Either`/base-class use
+case (pakai record bawaan), menolak data source terpisah untuk SQLite sederhana,
+dan tidak memberi settings domain layer — semuanya demi menghindari
+over-engineering tanpa mengorbankan dependency rule.
