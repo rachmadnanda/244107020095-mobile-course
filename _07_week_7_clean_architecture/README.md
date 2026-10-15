@@ -85,6 +85,48 @@ flutter test
 flutter run
 ```
 
+## Laporan Praktikum 1 — Audit layer project lama
+
+Audit penuh ada di [`docs/praktikum1-audit.md`](docs/praktikum1-audit.md). Ringkasan:
+
+**Peta file → layer (masalah utama):**
+
+| File lama | Layer | Masalah |
+| --- | --- | --- |
+| `lib/data/local/note.dart` | data+domain | Entity & model jadi satu kelas; `toMap`/`fromMap` menempel di bisnis. |
+| `lib/data/repositories/note_repository.dart` | data | Kontrak + implementasi tercampur; melempar exception, bukan `Failure`. |
+| `lib/data/sync.dart` | data+bisnis | `syncNotes` = logika bisnis (gabung repo + aturan offline) → calon use case. |
+| `lib/pages/*.dart` | presentation+provider | Provider DI tersebar di halaman; `new Repository()` langsung. |
+
+**Hasil tiga grep audit (before):**
+- Grep A (data mentah di presentation): **NOL**.
+- Grep B (logika bisnis di `build()`): **NOL**.
+- Grep C (DI bocor): **3 temuan** — `PrefsRepository()` di `main.dart`, `PrefsRepository()` & `NoteRepository()` di-instantiate di provider file halaman.
+
+## Laporan Praktikum 2 — Domain & data per fitur
+
+Fitur `notes` dipisah menjadi:
+
+- **Domain** (`features/notes/domain/`): entity `Note` murni (tanpa mapping),
+  **interface** `NoteRepository` (return record `(value, failure)`), dan use case
+  `GetNotes` / `AddNote` / `SyncNotes` (yang menggabungkan aturan bisnis).
+- **Data** (`features/notes/data/`): `NoteModel` (satu-satunya tempat
+  `toMap`/`fromMap`, extends `Note` + `toEntity()`), `NoteRepositoryImpl` (SQLite,
+  mengubah exception → `LocalFailure`), `db.dart` (data source).
+
+Keputusan: `SyncNotes` layak jadi use case (gabung `countDirty` + `markAllSynced`
++ aturan offline); `deleteNote`/`fetchNote` tetap repository langsung (CRUD
+satu-baris). Lihat AI Challenge §5.2.
+
+## Laporan Praktikum 3 — Presentation, DI, verifikasi
+
+- **DI terpusat**: `notes_providers.dart` dan `settings_providers.dart` adalah
+  satu-satunya tempat wiring; widget tidak pernah `new Repository()`.
+- **Halaman steril**: hanya `ref.watch` + render; tanpa SQL/Dio/JSON/format mentah.
+- **Fitur settings** juga dipisah (data + presentation).
+- **Verifikasi**: 3 grep sterilitas NOL (lihat bagian "Bukti dependency rule"),
+  `flutter analyze` bersih, `flutter test` 8 hijau. Behavior diuji manual identik.
+
 ## Bukti dependency rule (tiga grep sterilitas)
 
 Semua menghasilkan **NOL**:
@@ -106,18 +148,58 @@ rg "NoteRepository\(|PrefsRepository\(|NoteRepositoryImpl\(" lib/features/*/pres
 ## Behavior identik (before / after)
 
 Aplikasi berjalan sama persis seperti sebelum refactor (tambah/hapus catatan,
-detail, sinkronisasi, mode gelap). Bukti screenshot before/after ada di folder
-[`screenshots/`](screenshots/) — folder `_05_...` adalah versi before.
+detail, sinkronisasi, mode gelap). Inti bukti: **UI sama, struktur folder beda.**
+Daftar gambar ada di [`screenshots/README.md`](screenshots/README.md); folder
+`_05_...` adalah versi before.
+
+**Placeholder screenshot (jalankan `flutter run` di folder ini):**
+
+| File | Yang ditunjukkan | Membuktikan |
+| --- | --- | --- |
+| `after-notes-list.png` | Daftar catatan berisi item + badge "Belum tersinkron" | Baca data lewat `GetNotes` tetap jalan |
+| `after-add-note.png` | Dialog tambah catatan + hasil setelah disimpan | `AddNote` use case + repo berfungsi |
+| `after-note-detail.png` | Halaman detail satu catatan (`/note/:id`) | `fetchNote` + rute tetap jalan |
+| `after-sync.png` | SnackBar hasil sinkronisasi | `SyncNotes` + offline toggle berfungsi |
+| `after-settings.png` | Halaman pengaturan (mode gelap + waktu terakhir dibuka) | Fitur settings (prefs) tetap jalan |
+| `before-notes-list.png` | Daftar catatan dari project `_05_...` (before) | Tampilan sama sebelum refactor |
+| `structure-before.png` | Struktur `lib/` lama `{data, pages, widgets}` | Struktur sebelum refactor |
+| `structure-after.png` | Struktur `lib/` baru (`core/`, `features/.../{domain,data,presentation}`) | Inti Clean Architecture |
+| `tests-pass.png` | Output terminal `flutter test` (8 hijau) | Test lulus |
+| `greps-zero.png` | Output terminal 3 grep sterilitas (NOL) | Dependency rule terbukti |
 
 ## AI Challenge
 
-Proses lengkap (prompt, output awal AI, tabel usulan-vs-keputusan-final, dan
-hasil grep) ada di [`docs/ai-challenge.md`](docs/ai-challenge.md). Audit layer
-project lama ada di [`docs/praktikum1-audit.md`](docs/praktikum1-audit.md).
+Proses lengkap ada di [`docs/ai-challenge.md`](docs/ai-challenge.md). Ringkasan:
 
-Ringkasan penyederhanaan atas usulan AI: 7 use case → 3, wrapper `Either`
-sendiri → record bawaan, data source terpisah → digabung ke repository impl, dan
-settings tanpa domain layer.
+**Prompt yang diberikan** (inti):
+
+```text
+Project Flutter saya: week5_offline_notes. Kondisi kini: lib/{data, pages, widgets},
+repository tercampur implementasi, provider DI tersebar, entity & model satu kelas.
+Tugas: (1) usulkan struktur feature-first Clean Architecture untuk notes+settings;
+(2) tujuan baru tiap file lama; (3) tandai yang over-engineering untuk CRUD
+sederhana + kapan use case dibutuhkan vs repository langsung; (4) wiring DI
+Riverpod. Jelaskan trade-off tiap keputusan.
+```
+
+**Usulan AI (yang disederhanakan):** 7 use case per operasi CRUD, wrapper
+`Either`/`Result` sendiri + base class use case, lapisan `datasources/` terpisah,
+dan settings diberi domain layer sendiri.
+
+**Tabel usulan vs keputusan final:**
+
+| Usulan AI | Keputusan final | Alasan |
+| --- | --- | --- |
+| 7 use case (tiap CRUD) | **3 use case** (`GetNotes`, `AddNote`, `SyncNotes`) | Use case per CRUD satu-baris = over-engineering |
+| Wrapper `Either`/`Result` + base class | **Record Dart** `(value, failure)` | Idiomatik Dart 3, lebih sedikit kode |
+| `datasources/` terpisah | **Digabung** ke `NoteRepositoryImpl` | Satu sumber data sederhana tidak butuh indireksi |
+| Settings ber-domain layer | **Tanpa domain layer** | Settings hanya read/write prefs, domain-nya kosong |
+| Interface di domain, impl di data | **Diterapkan** | Syarat dependency rule |
+| Entity bebas mapping, `NoteModel` extends `Note` | **Diterapkan** | Mapping hanya di model |
+| Wiring DI terpusat di provider | **Diterapkan** | Widget tidak `new Repository()` |
+
+Bukti visual checklist ada di `screenshots/greps-zero.png` (placeholder). Audit
+layer project lama: [`docs/praktikum1-audit.md`](docs/praktikum1-audit.md).
 
 ## Hasil yang dicapai
 

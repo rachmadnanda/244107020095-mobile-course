@@ -102,6 +102,10 @@ rg "NoteRepository\(|PrefsRepository\(|NoteRepositoryImpl\(" lib/features/*/pres
 → NOL
 ```
 
+Bukti visual ketiga grep (dan `flutter test` hijau) tersedia di
+`../screenshots/greps-zero.png` dan `../screenshots/tests-pass.png`
+(lihat `../screenshots/README.md`).
+
 ## 5. Keputusan final & alasan teknis
 
 ### 5.1 Interface repository di domain (diterapkan)
