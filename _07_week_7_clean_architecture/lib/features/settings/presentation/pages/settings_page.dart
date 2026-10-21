@@ -43,8 +43,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               title: const Text('Mode Gelap'),
               subtitle: const Text('Simpan preferensi tema secara lokal'),
               value: enabled,
-              onChanged: (_) =>
-                  ref.read(darkModeProvider.notifier).toggle(),
+              onChanged: (_) => ref.read(darkModeProvider.notifier).toggle(),
             ),
             const Divider(),
             ListTile(

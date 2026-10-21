@@ -19,7 +19,10 @@ class FakeNoteRepository implements NoteRepository {
   @override
   Future<({List<Note> notes, Failure? failure})> fetchNotes() async {
     if (fail) {
-      return (notes: const <Note>[], failure: const LocalFailure('db locked (simulasi)'));
+      return (
+        notes: const <Note>[],
+        failure: const LocalFailure('db locked (simulasi)'),
+      );
     }
     return (notes: items, failure: null);
   }
@@ -34,21 +37,29 @@ class FakeNoteRepository implements NoteRepository {
     String body = '',
   }) async {
     if (fail) return (note: null, failure: const LocalFailure('gagal simpan'));
-    final note = Note(id: items.length + 1, title: title, body: body, updatedAt: DateTime(2026, 9, 27), dirty: true);
+    final note = Note(
+      id: items.length + 1,
+      title: title,
+      body: body,
+      updatedAt: DateTime(2026, 9, 27),
+      dirty: true,
+    );
     return (note: note, failure: null);
   }
 
   @override
-  Future<({Failure? failure})> deleteNote(int id) async => (failure: null,);
+  Future<({Failure? failure})> deleteNote(int id) async => (failure: null);
 
   @override
   Future<({int count, Failure? failure})> countDirty() async {
-    if (fail) return (count: 0, failure: const LocalFailure('db locked (simulasi)'));
+    if (fail) {
+      return (count: 0, failure: const LocalFailure('db locked (simulasi)'));
+    }
     return (count: items.where((n) => n.dirty).length, failure: null);
   }
 
   @override
-  Future<({Failure? failure})> markAllSynced() async => (failure: null,);
+  Future<({Failure? failure})> markAllSynced() async => (failure: null);
 }
 
 void main() {
@@ -71,9 +82,9 @@ void main() {
   });
 
   test('GetNotes meneruskan daftar dari repository (sukses)', () async {
-    final repo = FakeNoteRepository(items: [
-      Note(title: 'A', updatedAt: DateTime(2026, 9, 27)),
-    ]);
+    final repo = FakeNoteRepository(
+      items: [Note(title: 'A', updatedAt: DateTime(2026, 9, 27))],
+    );
     final result = await GetNotes(repo).call();
     expect(result.failure, isNull);
     expect(result.notes.length, 1);
@@ -88,30 +99,36 @@ void main() {
   });
 
   test('SyncNotes menolak saat offline (failure)', () async {
-    final repo = FakeNoteRepository(items: [
-      Note(title: 'A', updatedAt: DateTime(2026, 9, 27), dirty: true),
-    ]);
+    final repo = FakeNoteRepository(
+      items: [Note(title: 'A', updatedAt: DateTime(2026, 9, 27), dirty: true)],
+    );
     final result = await SyncNotes(repo).call(offline: true);
     expect(result.failure, isA<NetworkFailure>());
     expect(result.synced, 0);
   });
 
   test('SyncNotes menghitung yang tersinkron (sukses)', () async {
-    final repo = FakeNoteRepository(items: [
-      Note(title: 'A', updatedAt: DateTime(2026, 9, 27), dirty: true),
-      Note(title: 'B', updatedAt: DateTime(2026, 9, 27), dirty: true),
-    ]);
+    final repo = FakeNoteRepository(
+      items: [
+        Note(title: 'A', updatedAt: DateTime(2026, 9, 27), dirty: true),
+        Note(title: 'B', updatedAt: DateTime(2026, 9, 27), dirty: true),
+      ],
+    );
     final result = await SyncNotes(repo).call();
     expect(result.failure, isNull);
     expect(result.synced, 2);
   });
 
   test('notesProvider sukses dengan repository palsu', () async {
-    final container = ProviderContainer(overrides: [
-      noteRepositoryProvider.overrideWithValue(
-        FakeNoteRepository(items: [Note(title: 'Tes', updatedAt: DateTime.now())]),
-      ),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        noteRepositoryProvider.overrideWithValue(
+          FakeNoteRepository(
+            items: [Note(title: 'Tes', updatedAt: DateTime.now())],
+          ),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
     final notes = await container.read(notesProvider.future);
     expect(notes.length, 1);

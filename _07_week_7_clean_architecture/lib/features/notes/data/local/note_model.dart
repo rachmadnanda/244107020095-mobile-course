@@ -33,6 +33,11 @@ class NoteModel extends Note {
     );
   }
 
-  Note toEntity() =>
-      Note(id: id, title: title, body: body, updatedAt: updatedAt, dirty: dirty);
+  Note toEntity() => Note(
+    id: id,
+    title: title,
+    body: body,
+    updatedAt: updatedAt,
+    dirty: dirty,
+  );
 }
