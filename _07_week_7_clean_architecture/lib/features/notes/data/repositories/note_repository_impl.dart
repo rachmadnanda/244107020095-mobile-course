@@ -58,8 +58,12 @@ class NoteRepositoryImpl implements NoteRepository {
       final now = DateTime.now();
       final id = await db.insert(
         'notes',
-        NoteModel(title: title, body: body, updatedAt: now, dirty: true)
-            .toMap(),
+        NoteModel(
+          title: title,
+          body: body,
+          updatedAt: now,
+          dirty: true,
+        ).toMap(),
       );
       return (
         note: Note(
@@ -81,9 +85,9 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final db = await _openDb();
       await db.delete('notes', where: 'id = ?', whereArgs: [id]);
-      return (failure: null,);
+      return (failure: null);
     } catch (e) {
-      return (failure: LocalFailure('Gagal menghapus catatan: $e'),);
+      return (failure: LocalFailure('Gagal menghapus catatan: $e'));
     }
   }
 
@@ -96,7 +100,10 @@ class NoteRepositoryImpl implements NoteRepository {
       );
       return (count: (rows.first['c'] as num?)?.toInt() ?? 0, failure: null);
     } catch (e) {
-      return (count: 0, failure: LocalFailure('Gagal membaca status sinkron: $e'));
+      return (
+        count: 0,
+        failure: LocalFailure('Gagal membaca status sinkron: $e'),
+      );
     }
   }
 
@@ -105,9 +112,9 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final db = await _openDb();
       await db.update('notes', {'dirty': 0}, where: 'dirty = 1');
-      return (failure: null,);
+      return (failure: null);
     } catch (e) {
-      return (failure: LocalFailure('Gagal menandai sinkron: $e'),);
+      return (failure: LocalFailure('Gagal menandai sinkron: $e'));
     }
   }
 }

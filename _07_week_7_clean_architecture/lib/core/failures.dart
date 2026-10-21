@@ -18,3 +18,8 @@ class LocalFailure extends Failure {
 class NetworkFailure extends Failure {
   const NetworkFailure(super.message);
 }
+
+/// Kegagalan validasi aturan bisnis (mis. judul catatan kosong).
+class ValidationFailure extends Failure {
+  const ValidationFailure(super.message);
+}

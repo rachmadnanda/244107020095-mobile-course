@@ -12,6 +12,13 @@ class AddNote {
     required String title,
     String body = '',
   }) {
-    return _repository.addNote(title: title, body: body);
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) {
+      return Future.value((
+        note: null,
+        failure: const ValidationFailure('Judul catatan tidak boleh kosong'),
+      ));
+    }
+    return _repository.addNote(title: trimmed, body: body.trim());
   }
 }

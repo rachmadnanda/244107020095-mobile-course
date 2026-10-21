@@ -1,0 +1,10 @@
+$ flutter analyze
+Analyzing _07_week_7_clean_architecture...                      
+
+   info • The package name '_07_week_7_clean_architecture' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style • pubspec.yaml:1:7 • package_names
+
+1 issue found. (ran in 3.4s)
+
+$ dart format --set-exit-if-changed .
+Formatted 21 files (0 changed) in 0.06 seconds.
+exit code: 0

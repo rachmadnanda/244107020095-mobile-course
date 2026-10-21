@@ -39,19 +39,16 @@ class NotesPage extends ConsumerWidget {
             ),
             FilledButton(
               onPressed: () async {
-                final title = titleController.text.trim();
-                final body = bodyController.text.trim();
-                if (title.isEmpty) return;
-
+                // Validasi & normalisasi input dilakukan di use case
+                // AddNote; UI mengirim nilai mentah dari controller.
                 final failure = await ref
                     .read(notesProvider.notifier)
-                    .addNote(title, body);
+                    .addNote(titleController.text, bodyController.text);
 
                 if (context.mounted) {
                   if (failure != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(failure.message)),
-                    );
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(failure.message)));
                   } else {
                     Navigator.pop(context);
                   }
@@ -143,9 +140,8 @@ class NotesPage extends ConsumerWidget {
                 onTap: () => context.push('/note/${note.id}'),
                 onDelete: note.id == null
                     ? () {}
-                    : () => ref
-                        .read(notesProvider.notifier)
-                        .deleteNote(note.id!),
+                    : () =>
+                          ref.read(notesProvider.notifier).deleteNote(note.id!),
               );
             },
           );
