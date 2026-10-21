@@ -1,0 +1,13 @@
+$ git log --oneline --graph --all -8
+* 2c8e2e7 feat(notes): validasi judul kosong + test (#1)
+* 13d1eda docs: laporan praktikum 1-3, AI challenge, dan placeholder screenshots
+* e9bec7c refactor: clean architecture feature-first (notes + settings) with use-case tests
+* 79c6591 chore: snapshot before clean architecture (copy of week5_offline_notes)
+* f42593b tugas & laporan akhir
+* 1fe4188 ai-challenge
+* a30c9de praktikum 3
+* b88ba11 praktikum 1 & 2
+
+$ git branch
+* develop
+  main
