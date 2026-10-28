@@ -1,0 +1,8 @@
+=== GREP 1: presentation steril dari data mentah ===
+NOL
+=== GREP 2: domain steril dari framework/package ===
+NOL
+=== GREP 3: widget tidak instansiasi repository ===
+NOL
+=== GREP 4: logika filter tidak tinggal di presentation ===
+NOL
