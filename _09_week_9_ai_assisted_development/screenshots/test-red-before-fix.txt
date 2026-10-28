@@ -1,0 +1,28 @@
+00:00 +0: loading /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_07_week_7_clean_architecture/test/search_filter_test.dart
+00:00 +0: filterNotes — pencarian judul filter abaikan huruf besar/kecil
+00:00 +0 -1: filterNotes — pencarian judul filter abaikan huruf besar/kecil [E]
+  Expected: an object with length of <2>
+    Actual: [Instance of 'Note']
+     Which: has length of <1>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/search_filter_test.dart 16:7                   main.<fn>.<fn>
+  
+00:00 +0 -1: filterNotes — pencarian judul query tak cocok mengembalikan kosong (empty state)
+00:00 +1 -1: filterNotes — pencarian judul query kosong mengembalikan semua catatan
+00:00 +2 -1: filterNotes — pencarian judul query dengan spasi di tepi tetap cocok
+00:00 +2 -2: filterNotes — pencarian judul query dengan spasi di tepi tetap cocok [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/search_filter_test.dart 29:7                   main.<fn>.<fn>
+  
+00:00 +2 -2: Some tests failed.
+
+Failing tests:
+  /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_07_week_7_clean_architecture/test/search_filter_test.dart: filterNotes — pencarian judul filter abaikan huruf besar/kecil
+  /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_07_week_7_clean_architecture/test/search_filter_test.dart: filterNotes — pencarian judul query dengan spasi di tepi tetap cocok

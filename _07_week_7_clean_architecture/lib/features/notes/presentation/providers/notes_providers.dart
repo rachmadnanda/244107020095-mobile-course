@@ -7,6 +7,7 @@ import '../../domain/entities/note.dart';
 import '../../domain/repositories/note_repository.dart';
 import '../../domain/usecases/add_note.dart';
 import '../../domain/usecases/get_notes.dart';
+import '../../domain/usecases/search_notes.dart';
 import '../../domain/usecases/sync_notes.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,6 +36,20 @@ final addNoteProvider = Provider<AddNote>(
 final syncNotesProvider = Provider<SyncNotes>(
   (ref) => SyncNotes(ref.watch(noteRepositoryProvider)),
 );
+
+/// Use case pencarian: murni, tidak butuh repository.
+final searchNotesProvider = Provider<SearchNotes>((ref) => const SearchNotes());
+
+/// State query pencarian (dipakai UI + filteredNotesProvider).
+final searchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Daftar catatan setelah difilter use case `SearchNotes`.
+final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
+  final notes = ref.watch(notesProvider);
+  final query = ref.watch(searchQueryProvider);
+  final search = ref.watch(searchNotesProvider);
+  return notes.whenData((items) => search(items, query));
+});
 
 /// Presentation layer: state untuk UI.
 final notesProvider = AsyncNotifierProvider<NotesNotifier, List<Note>>(

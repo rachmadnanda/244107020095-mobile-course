@@ -6,11 +6,26 @@ import '../providers/notes_providers.dart';
 import '../widgets/note_tile.dart';
 
 /// Halaman daftar catatan. Hanya membaca state — tanpa SQL, Dio, JSON, atau
-/// formatting tanggal mentah. Semua logika melalui provider.
-class NotesPage extends ConsumerWidget {
+/// aturan pencarian. Filter dijalankan use case `SearchNotes` lewat provider.
+class NotesPage extends ConsumerStatefulWidget {
   const NotesPage({super.key});
 
-  Future<void> _showAddNoteDialog(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<NotesPage> createState() => _NotesPageState();
+}
+
+class _NotesPageState extends ConsumerState<NotesPage> {
+  /// Controller hanya mengurus teks yang tampil di field; nilai query tetap
+  /// hidup di `searchQueryProvider`.
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _showAddNoteDialog(BuildContext context) async {
     final titleController = TextEditingController();
     final bodyController = TextEditingController();
 
@@ -65,7 +80,7 @@ class NotesPage extends ConsumerWidget {
     bodyController.dispose();
   }
 
-  Future<void> _onSync(BuildContext context, WidgetRef ref) async {
+  Future<void> _onSync(BuildContext context) async {
     final offline = ref.read(forceOfflineProvider);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -90,8 +105,11 @@ class NotesPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final notes = ref.watch(notesProvider);
+    final filtered = ref.watch(filteredNotesProvider);
+    final query = ref.watch(searchQueryProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catatan'),
@@ -120,35 +138,89 @@ class NotesPage extends ConsumerWidget {
           IconButton(
             tooltip: 'Sinkronisasi',
             icon: const Icon(Icons.sync),
-            onPressed: () => _onSync(context, ref),
+            onPressed: () => _onSync(context),
           ),
         ],
       ),
-      body: notes.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Terjadi kesalahan: $error')),
-        data: (items) {
-          if (items.isEmpty) {
-            return const Center(child: Text('Belum ada catatan'));
-          }
-          return ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final note = items[index];
-              return NoteTile(
-                note: note,
-                onTap: () => context.push('/note/${note.id}'),
-                onDelete: note.id == null
-                    ? () {}
-                    : () =>
-                          ref.read(notesProvider.notifier).deleteNote(note.id!),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Cari judul catatan',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Hapus pencarian',
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          // Kosongkan teks yang tampil DAN state query.
+                          _searchController.clear();
+                          ref.read(searchQueryProvider.notifier).state = '';
+                        },
+                      ),
+              ),
+              onChanged: (value) =>
+                  ref.read(searchQueryProvider.notifier).state = value,
+            ),
+          ),
+          Expanded(
+            child: filtered.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) =>
+                  Center(child: Text('Terjadi kesalahan: $error')),
+              data: (items) {
+                if (items.isEmpty) {
+                  final hasAnyNote = notes.value?.isNotEmpty ?? false;
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            hasAnyNote
+                                ? Icons.search_off
+                                : Icons.note_alt_outlined,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            hasAnyNote
+                                ? 'Tidak ada catatan yang cocok dengan "$query"'
+                                : 'Belum ada catatan',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final note = items[index];
+                    return NoteTile(
+                      note: note,
+                      onTap: () => context.push('/note/${note.id}'),
+                      onDelete: note.id == null
+                          ? () {}
+                          : () => ref
+                                .read(notesProvider.notifier)
+                                .deleteNote(note.id!),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddNoteDialog(context, ref),
+        onPressed: () => _showAddNoteDialog(context),
         child: const Icon(Icons.add),
       ),
     );
