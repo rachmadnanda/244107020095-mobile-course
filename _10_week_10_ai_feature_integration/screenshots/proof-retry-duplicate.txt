@@ -1,0 +1,15 @@
+00:00 +0: loading /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_10_week_10_ai_feature_integration/test/_proof_retry_duplicate_test.dart
+00:00 +0: BUKTI: retry versi lama menggandakan pesan pengguna
+00:00 +0 -1: BUKTI: retry versi lama menggandakan pesan pengguna [E]
+  Expected: <1>
+    Actual: <2>
+  satu pertanyaan tidak boleh muncul dua kali di transkrip
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/_proof_retry_duplicate_test.dart 71:5          main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_10_week_10_ai_feature_integration/test/_proof_retry_duplicate_test.dart: BUKTI: retry versi lama menggandakan pesan pengguna
