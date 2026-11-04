@@ -223,7 +223,7 @@ lib/features/assistant/
 
 ## 5. Test sebagai pembukti
 
-47 test baru, total **70/70 lulus**. Test ditulis untuk menargetkan perilaku
+53 test baru, total **76/76 lulus**. Test ditulis untuk menargetkan perilaku
 yang benar, bukan sekadar mengejar coverage.
 
 | File | Jumlah | Fokus |
@@ -231,7 +231,8 @@ yang benar, bukan sekadar mengejar coverage.
 | `privacy_guard_test.dart` | 10 | Redaksi email/NIK/telepon, potong konteks pada batas kata |
 | `ask_assistant_test.dart` | 10 | System prompt, batas 5 catatan, redaksi, validasi pertanyaan kosong |
 | `gemini_repository_test.dart` | 17 | Header key, model, skema body, parsing defensif, status HTTP, timeout |
-| `assistant_widget_test.dart` | 8 | No-key state, empty state, kirim pesan, indikator menulis, retry |
+| `assistant_widget_test.dart` | 9 | No-key state, empty state, kirim pesan, indikator menulis, retry, ketuk ganda |
+| `chat_notifier_test.dart` | 5 | State percakapan: kirim, tumpang tindih, clear, bubble error |
 | `no_hardcoded_secrets_test.dart` | 2 | Penjaga: tidak ada API key di `lib/`; nama slot secure storage bukan key |
 
 Dua bug ditemukan oleh test dan diperbaiki:
@@ -293,7 +294,7 @@ Bukti: [`../screenshots/proof-secret-guard.txt`](../screenshots/proof-secret-gua
 dijaga grep manual akan bolong saat format data berubah; aturan yang penting
 harus dijadikan test.
 
-## 6. AI Challenge — review kode final (6 temuan)
+## 6. AI Challenge — review kode final (7 temuan)
 
 Prompt:
 
@@ -312,8 +313,10 @@ Beri temuan + level blocker/saran + alasan.
 | 4 | Tidak ada batas request per pengguna/hari | saran | **DITOLAK (scope)** | Aplikasi lokal single-user tanpa backend/auth; mitigasi: `maxNotes`, `maxContextChars`, timeout, dan kuota gratis Gemini. Butuh backend untuk rate limit yang benar-benar bisa ditegakkan |
 | 5 | Riwayat percakapan tidak dikirim ke model (tidak multi-turn) | saran | **DITOLAK (desain)** | Setiap pertanyaan sengaja berdiri sendiri: hemat token, kecil risiko privasi, dan konteks catatan sudah dikirim ulang tiap request. Multi-turn dicatat sebagai backlog |
 | 6 | Validasi API key hanya "tidak kosong" | saran | **DITOLAK** | Format key dapat berubah; validasi sebenarnya ada di server (401/403) dan UI sudah menampilkan pesan yang jelas |
+| 7 | Penjaga `_isSending` hanya ada di widget, `ChatNotifier` sendiri tanpa penjaga | blocker | **DITERIMA + diperbaiki** | Ditemukan dari screenshot uji live (§7b): 2 request dibayar, jawaban pertama hilang. Ditambah flag `_inFlight` di notifier + 5 test regresi |
 
 Bukti temuan #1: [`../screenshots/proof-retry-duplicate.txt`](../screenshots/proof-retry-duplicate.txt).
+Bukti temuan #7: [`../screenshots/proof-concurrent-send.txt`](../screenshots/proof-concurrent-send.txt).
 
 ### Keputusan per file
 
@@ -361,22 +364,77 @@ Aturan penyusunan:
 - Email, NIK, dan nomor telepon diredaksi menjadi `[email]`, `[nik]`,
   `[telepon]` **sebelum** teks meninggalkan perangkat.
 
-### 7.3 Output awal AI (jawaban model)
+### 7.3 Output awal AI (jawaban model) — hasil uji live
 
-**Belum tersedia.** API key Gemini belum dibuat, sehingga belum ada respons
-nyata dari model untuk didokumentasikan. Yang sudah dibuktikan adalah
-*parsing* respons (17 test dengan body JSON tiruan, termasuk kasus prompt
-diblokir) dan *penyusunan* prompt (10 test). Bagian ini akan diisi output
-nyata setelah API key tersedia dan uji live dijalankan — bukan dikarang.
+Diambil dari emulator Android (Pixel_4), 4 November 2026, dengan catatan uji
+berisi dua buku. Pertanyaan dikirim lewat chip **"Ringkas semua catatanku"**.
 
-## 8. Yang belum diuji
+Jawaban model apa adanya:
 
-| Hal | Status | Alasan |
+```text
+Catatanmu berisi dua daftar buku beserta penulisnya, yaitu "Madilog" karya
+Tan Malaka dan "Bumi Manusia" karya Pramoedya Ananta Toer.
+```
+
+Bukti: [`../screenshots/assistant-chat.png`](../screenshots/assistant-chat.png).
+
+Yang bisa disimpulkan dari respons nyata ini:
+
+| Aspek | Hasil |
+| --- | --- |
+| Bahasa | Indonesia — sesuai system prompt |
+| Panjang | 1 kalimat, di bawah batas 3 kalimat |
+| Kesetiaan pada konteks | Hanya menyebut isi catatan; tidak menambah buku lain |
+| Judul & penulis | Benar, sesuai data catatan |
+| Kebocoran data pribadi | Tidak ada (data uji memang tanpa PII) |
+
+Kegagalan jaringan juga terbukti live: dengan Wi-Fi dimatikan, muncul bubble
+error **"Tidak dapat terhubung ke layanan AI. Periksa koneksi internet."**
+disertai banner **"Coba lagi"** — jalur `ClientException` →
+`AiFailure(retryable: true)` bekerja sebagaimana diuji unit.
+Bukti: [`../screenshots/assistant-error.png`](../screenshots/assistant-error.png).
+
+## 7b. Temuan dari uji live: pengiriman tumpang tindih
+
+Screenshot uji live memperlihatkan **dua bubble pertanyaan identik dengan
+satu jawaban**. Awalnya tampak seperti pengguna mengirim dua kali, tetapi
+urutannya (bubble 1, bubble 2, satu jawaban) menunjukkan hal lain: dua
+`send()` berjalan **bersamaan**, masing-masing memegang snapshot state
+sendiri, lalu yang selesai terakhir menimpa yang lebih dulu — jawaban
+pertama **hilang diam-diam** padahal requestnya sudah dibayar.
+
+Direproduksi dengan test yang mensimulasikan request pertama lebih lambat:
+
+```text
+Expected: <2>          <- dua request dibayar, harusnya dua jawaban tampil
+  Actual: <1>          <- jawaban pertama tertimpa
+```
+
+Bukti: [`../screenshots/proof-concurrent-send.txt`](../screenshots/proof-concurrent-send.txt).
+
+Penjaga di widget (`_isSending`) ternyata tidak cukup: ia hanya mencegah
+ketukan kedua lewat UI, bukan menjamin satu request per pertanyaan di level
+state. Perbaikan: flag `_inFlight` di `ChatNotifier` — pengiriman kedua
+ditolak selama yang pertama belum selesai. Regresi dijaga
+`test/chat_notifier_test.dart` (5 test), termasuk memastikan penjaga
+**tidak** mengunci selamanya.
+
+## 8. Status pengujian
+
+| Hal | Status | Bukti |
 | --- | --- | --- |
-| Panggilan nyata ke Gemini API | **belum** | API key belum dibuat |
-| Perilaku model terhadap prompt asli | **belum** | idem |
-| Tampilan di perangkat/emulator | **belum** | screenshot UI menunggu pengambilan manual |
+| Panggilan nyata ke Gemini API | **sudah** | [`assistant-chat.png`](../screenshots/assistant-chat.png) |
+| Perilaku model terhadap prompt asli | **sudah** | §7.3 — jawaban patuh pada system prompt |
+| Tampilan di emulator Android | **sudah** | 5 screenshot di [`../screenshots/`](../screenshots/README.md) |
+| Fallback tanpa API key | **sudah** | [`assistant-no-key.png`](../screenshots/assistant-no-key.png) |
+| Fallback kegagalan jaringan | **sudah** | [`assistant-error.png`](../screenshots/assistant-error.png) |
 
-Semua yang bisa diuji tanpa jaringan (domain, parsing, state, widget) sudah
-diuji dan hijau. Klaim "fitur berjalan end-to-end" **tidak** dibuat sampai
-uji live benar-benar dilakukan.
+Yang **belum** diuji:
+
+| Hal | Alasan |
+| --- | --- |
+| Streaming token demi token | Codelab menyebut "streaming response", tetapi implementasi ini memakai satu request `generateContent` (non-streaming). Dicatat sebagai backlog, bukan diklaim |
+| Uji di iOS | Tidak ada perangkat/mesin macOS dalam pengerjaan ini |
+| Rate limit per pengguna | Butuh backend/auth; lihat §6 temuan #4 |
+
+Seluruh 76 test otomatis hijau: [`../screenshots/flutter-test-final.txt`](../screenshots/flutter-test-final.txt).

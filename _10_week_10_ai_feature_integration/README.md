@@ -10,10 +10,11 @@ apa adanya. Enam masalah nyata (model pensiun, konflik dependensi, API key di
 URL, parsing yang crash, exception mentah, tanpa timeout) dibuktikan dengan
 dokumentasi resmi, `flutter analyze`, dan test merah — lalu diperbaiki.
 
-> **Status uji live:** API key Gemini belum dibuat, sehingga panggilan nyata
-> ke model **belum** dijalankan. Semua yang bisa diuji tanpa jaringan
-> (domain, parsing, state, widget) sudah hijau: **70/70 test**. Klaim
-> "end-to-end berjalan" sengaja **tidak** dibuat. Rincian: [`docs/ai-log.md`](docs/ai-log.md) §8.
+> **Status uji live:** **sudah dijalankan** di emulator Android (Pixel_4)
+> pada 4 November 2026 — jalur sukses (jawaban model nyata), fallback tanpa
+> API key, dan fallback kegagalan jaringan semuanya terbukti. Bukti:
+> [`screenshots/`](screenshots/README.md). Test otomatis: **76/76 lulus**.
+> Rincian: [`docs/ai-log.md`](docs/ai-log.md) §7.3 dan §8.
 
 ## Fitur: chat asisten catatan
 
@@ -153,6 +154,22 @@ Pertanyaan: Apa isi catatan belanja?
 | 6 | Tanpa timeout | Test `timeout → AiFailure` |
 | 7 | Tanpa redaksi & batas konteks | 10 test `privacy_guard_test.dart` |
 | 8 | Retry menggandakan bubble pengguna | [`screenshots/proof-retry-duplicate.txt`](screenshots/proof-retry-duplicate.txt) — `Expected: <1>, Actual: <2>` |
+| 9 | Pengiriman tumpang tindih: 2 request dibayar, jawaban pertama hilang | [`screenshots/proof-concurrent-send.txt`](screenshots/proof-concurrent-send.txt) — `Expected: <2>, Actual: <1>` |
+
+## Hasil uji live
+
+Dijalankan di emulator Android (Pixel_4), 4 November 2026, catatan uji berisi
+dua buku. Bukan simulasi — jawaban berasal dari `gemini-3.5-flash-lite`.
+
+| Skenario | Hasil nyata |
+| --- | --- |
+| Kirim "Ringkas semua catatanku" | Model menjawab: *"Catatanmu berisi dua daftar buku beserta penulisnya, yaitu "Madilog" karya Tan Malaka dan "Bumi Manusia" karya Pramoedya Ananta Toer."* — Bahasa Indonesia, 1 kalimat, hanya dari isi catatan |
+| Wi-Fi dimatikan, kirim pertanyaan | Bubble error "Tidak dapat terhubung ke layanan AI. Periksa koneksi internet." + banner "Coba lagi" (jalur `ClientException` → `retryable`) |
+| API key dihapus | Halaman "API key belum diatur" + tombol ke Pengaturan; tidak ada request dikirim |
+
+Keputusan yang bisa diambil dari hasil ini: system prompt **bekerja** (bahasa,
+panjang, kesetiaan pada konteks), dan pemetaan error jaringan **bekerja**
+tanpa exception bocor ke UI.
 
 ### Insiden nyata: API key ditempel ke nama slot
 
@@ -195,7 +212,8 @@ test/
 ├── privacy_guard_test.dart        # BARU — 10
 ├── ask_assistant_test.dart        # BARU — 10
 ├── gemini_repository_test.dart    # BARU — 17
-├── assistant_widget_test.dart     # BARU — 8
+├── assistant_widget_test.dart     # BARU — 9
+├── chat_notifier_test.dart        # BARU — 5 (state percakapan)
 └── no_hardcoded_secrets_test.dart # BARU — 2 (penjaga API key)
 ```
 
@@ -217,7 +235,7 @@ test/
 cd _10_week_10_ai_feature_integration
 flutter pub get
 flutter analyze
-flutter test          # 70 test
+flutter test          # 76 test
 flutter run
 ```
 
@@ -245,8 +263,8 @@ terulang.
 | Perintah | Hasil |
 | --- | --- |
 | `flutter analyze` | 0 error, 0 warning — sisa 1 info `package_names` bawaan nama folder repo |
-| `dart format --set-exit-if-changed .` | exit 0 — `Formatted 38 files (0 changed)` |
-| `flutter test` | **70/70 lulus** (23 lama + 47 baru) |
+| `dart format --set-exit-if-changed .` | exit 0 — `Formatted 39 files (0 changed)` |
+| `flutter test` | **76/76 lulus** (23 lama + 53 baru) |
 | 5 grep sterilitas | **NOL** semua |
 
 ```text
@@ -271,6 +289,7 @@ Detail dan alasan lengkap: [`docs/ai-log.md`](docs/ai-log.md) §6.
 | 4 | Tidak ada rate limit per pengguna/hari | saran | **DITOLAK (scope)** | Aplikasi lokal tanpa backend/auth; butuh server untuk menegakkan. Mitigasi: batas konteks + timeout + kuota Gemini |
 | 5 | Riwayat percakapan tidak dikirim (tidak multi-turn) | saran | **DITOLAK (desain)** | Tiap pertanyaan berdiri sendiri: hemat token & kecil risiko privasi |
 | 6 | Validasi API key hanya "tidak kosong" | saran | **DITOLAK** | Format key bisa berubah; validasi nyata di server (401/403) |
+| 7 | Penjaga `_isSending` hanya di widget; notifier tidak punya penjaga | blocker | **DITERIMA + diperbaiki** | Ditemukan dari screenshot uji live: 2 request dibayar, 1 jawaban hilang. Ditambah flag `_inFlight` di `ChatNotifier` + 5 test regresi |
 
 **Keputusan per file:**
 
@@ -287,16 +306,22 @@ Detail dan alasan lengkap: [`docs/ai-log.md`](docs/ai-log.md) §6.
 
 ## Screenshot
 
-Screenshot UI diambil setelah API key diatur (berkas gambar menyusul di
-`screenshots/`).
+Semua diambil dari emulator Android (Pixel_4) pada 4 November 2026, dengan
+catatan uji berisi dua buku (*Madilog*, *Bumi Manusia*).
 
 | Screenshot | Yang ditunjukkan |
 | --- | --- |
-| ![Empty state](screenshots/assistant-empty.png) | Halaman asisten: empty state + contoh pertanyaan |
-| ![Percakapan](screenshots/assistant-chat.png) | Pertanyaan pengguna + jawaban AI |
-| ![Error](screenshots/assistant-error.png) | Error jaringan + tombol "Coba lagi" |
-| ![Tanpa API key](screenshots/assistant-no-key.png) | State "API key belum diatur" + tombol ke Pengaturan |
-| ![Pengaturan](screenshots/settings-api-key.png) | Bagian Asisten AI di Pengaturan (status key) |
+| ![Empty state](screenshots/assistant-empty.png) | Halaman asisten: empty state "Tanya apa saja tentang catatanmu" + 3 chip contoh pertanyaan |
+| ![Percakapan](screenshots/assistant-chat.png) | **Uji live**: jawaban nyata model — "Catatanmu berisi dua daftar buku beserta penulisnya, yaitu *Madilog* karya Tan Malaka dan *Bumi Manusia* karya Pramoedya Ananta Toer." Dua bubble pertanyaan di atasnya adalah **bukti temuan §7b** (pengiriman tumpang tindih yang membuat jawaban pertama hilang) — sudah diperbaiki |
+| ![Error](screenshots/assistant-error.png) | **Uji live** dengan jaringan dimatikan: bubble error "Tidak dapat terhubung ke layanan AI" + banner "Coba lagi" |
+| ![Tanpa API key](screenshots/assistant-no-key.png) | State "API key belum diatur" + tombol "Buka Pengaturan"; API tidak dipanggil |
+| ![Pengaturan](screenshots/settings-api-key.png) | Bagian **Asisten AI** di Pengaturan: penjelasan penyimpanan, status API key, kolom input tersembunyi (key sengaja disamarkan), tombol Simpan |
+
+> Catatan jujur: pada `settings-api-key.png` status masih terbaca
+> **"Belum diatur"** karena gambar diambil sebelum tombol Simpan ditekan —
+> yang ditampilkan adalah proses pengisian key, bukan hasilnya. Setelah
+> disimpan, status berubah menjadi "Tersimpan di perangkat" dengan ikon
+> centang hijau (dijaga widget test "no-key state").
 
 ## Refleksi
 
@@ -345,6 +370,16 @@ pengguna; versi pertama saya melakukannya dan transkrip jadi terlihat seperti
 pengguna bertanya dua kali. Test widget menangkapnya (`Expected: <1>,
 Actual: <2>`), dan itu mengubah cara saya memandang state percakapan: retry
 adalah *mengulang permintaan*, bukan *mengirim pesan baru*.
+
+Pelajaran kedua datang dari screenshot uji live, bukan dari test: saya melihat
+dua bubble pertanyaan identik dengan **satu** jawaban. Ternyata bukan pengguna
+mengetuk dua kali — dua `send()` sempat berjalan bersamaan dan snapshot state
+yang lebih lama menimpa jawaban pertama, sehingga satu request terbayar tetapi
+jawabannya lenyap tanpa jejak. Penjaga `_isSending` di widget ternyata tidak
+cukup karena ia menjaga *ketukan*, bukan *state*. Sejak itu saya memindahkan
+penjaga ke `ChatNotifier` dan menulis test-nya. Yang paling saya bawa: UI yang
+"terlihat benar" di screenshot belum tentu benar secara state — dan bug paling
+mahal pada fitur AI adalah bug yang membuat pengguna membayar dua kali.
 
 ## Dokumen pendukung
 

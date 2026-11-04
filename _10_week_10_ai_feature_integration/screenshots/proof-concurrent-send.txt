@@ -1,0 +1,20 @@
+# Bukti: dua pengiriman tumpang tindih (kode SEBELUM penjaga di notifier)
+# Kondisi: send() dipanggil dua kali sebelum request pertama selesai.
+# Request pertama selesai lebih dulu, lalu snapshot-nya ditimpa.
+
+$ flutter test test/_proof_concurrent_send_test.dart
+00:00 +0: loading /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_10_week_10_ai_feature_integration/test/_proof_concurrent_send_test.dart
+00:00 +0: BUKTI: dua kiriman tumpang tindih menghilangkan jawaban pertama
+00:00 +0 -1: BUKTI: dua kiriman tumpang tindih menghilangkan jawaban pertama [E]
+  Expected: <2>
+    Actual: <1>
+  setiap request yang dibayar harus menghasilkan jawaban tampil
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/_proof_concurrent_send_test.dart 83:7          main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_10_week_10_ai_feature_integration/test/_proof_concurrent_send_test.dart: BUKTI: dua kiriman tumpang tindih menghilangkan jawaban pertama
