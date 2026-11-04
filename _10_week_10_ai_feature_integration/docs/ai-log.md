@@ -252,7 +252,7 @@ menguji manual, bukan oleh test:
 
 ```dart
 // SALAH — konstanta ini adalah NAMA SLOT, bukan isi key
-static const _key = 'AQ.Ab8RN6J7…';
+static const _key = 'AQ.xxxxxxxx…';
 
 // BENAR
 static const _key = 'gemini_api_key';
