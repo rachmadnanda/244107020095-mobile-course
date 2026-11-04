@@ -7,7 +7,7 @@ NOL
 === GREP 3: widget tidak instansiasi repository ===
 NOL
 
-=== GREP 4: API key tidak pernah di kode sumber ===
+=== GREP 4: API key tidak pernah di kode sumber (format lama AIza + baru AQ.) ===
 NOL
 
 === GREP 5: tidak ada ?key= di URL (key di header) ===
