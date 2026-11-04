@@ -203,6 +203,21 @@ void main() {
     expect(find.text('Ringkasan catatan'), findsOneWidget);
   });
 
+  testWidgets('ketuk ganda cepat hanya mengirim satu request', (tester) async {
+    // Menjaga agar ketukan tidak sengaja (atau pengguna yang mengira aplikasi
+    // macet) tidak menggandakan request — dan menggandakan biaya token.
+    final ai = _FakeAi(delay: const Duration(milliseconds: 200));
+    await tester.pumpWidget(_app(keyConfigured: true, ai: ai));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ringkas semua catatanku'));
+    await tester.tap(find.text('Ringkas semua catatanku'));
+    await tester.pumpAndSettle();
+
+    expect(ai.callCount, 1, reason: 'satu pertanyaan = satu request');
+    expect(find.text('Ringkas semua catatanku'), findsOneWidget);
+  });
+
   testWidgets('tombol Coba lagi tidak menggandakan pesan pengguna', (
     tester,
   ) async {

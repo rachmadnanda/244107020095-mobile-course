@@ -3,8 +3,8 @@ Analyzing _10_week_10_ai_feature_integration...
 
    info • The package name '_10_week_10_ai_feature_integration' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style • pubspec.yaml:1:7 • package_names
 
-1 issue found. (ran in 3.9s)
+1 issue found. (ran in 5.1s)
 
 $ dart format --set-exit-if-changed .
-Formatted 38 files (0 changed) in 0.14 seconds.
+Formatted 39 files (0 changed) in 0.17 seconds.
 exit code: 0
