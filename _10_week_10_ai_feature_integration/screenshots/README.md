@@ -10,9 +10,10 @@ Bukti berupa **output terminal nyata** (`.txt`) dan **screenshot UI** (`.png`).
 | `proof-riverpod-conflict.txt` | `flutter pub add riverpod:^2.5.0 --offline` | Konflik versi (exit 65, `version solving failed`) |
 | `proof-candidates-crash.txt` | Test replika parsing kode contoh codelab | `NoSuchMethodError: The method '[]' was called on null` saat prompt diblokir |
 | `proof-retry-duplicate.txt` | Test retry versi lama | `Expected: <1>, Actual: <2>` — bubble pengguna berlipat |
+| `proof-secret-guard.txt` | Test penjaga API key pada kondisi salah | Key tertempel di kode terdeteksi (`Expected: empty`, `Actual: [...]`); key diredaksi |
 | `analyze-format-final.txt` | `flutter analyze` + `dart format --set-exit-if-changed .` | Analyze bersih (1 info `package_names`), format exit 0 |
-| `flutter-test-final.txt` | `flutter test` | **68/68 test lulus** |
-| `greps-sterility.txt` | 5 grep sterilitas | Presentation & domain steril; tidak ada key di kode; tidak ada `?key=` |
+| `flutter-test-final.txt` | `flutter test` | **70/70 test lulus** |
+| `greps-sterility.txt` | 5 grep sterilitas | Presentation & domain steril; tidak ada key (`AIza…`/`AQ.…`) di kode; tidak ada `?key=` |
 
 ## Screenshot UI
 

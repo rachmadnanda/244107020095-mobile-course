@@ -223,7 +223,7 @@ lib/features/assistant/
 
 ## 5. Test sebagai pembukti
 
-45 test baru, total **68/68 lulus**. Test ditulis untuk menargetkan perilaku
+47 test baru, total **70/70 lulus**. Test ditulis untuk menargetkan perilaku
 yang benar, bukan sekadar mengejar coverage.
 
 | File | Jumlah | Fokus |
@@ -232,6 +232,7 @@ yang benar, bukan sekadar mengejar coverage.
 | `ask_assistant_test.dart` | 10 | System prompt, batas 5 catatan, redaksi, validasi pertanyaan kosong |
 | `gemini_repository_test.dart` | 17 | Header key, model, skema body, parsing defensif, status HTTP, timeout |
 | `assistant_widget_test.dart` | 8 | No-key state, empty state, kirim pesan, indikator menulis, retry |
+| `no_hardcoded_secrets_test.dart` | 2 | Penjaga: tidak ada API key di `lib/`; nama slot secure storage bukan key |
 
 Dua bug ditemukan oleh test dan diperbaiki:
 
@@ -243,6 +244,54 @@ Dua bug ditemukan oleh test dan diperbaiki:
    `'email saya [email]'`.
 
 Bukti hijau: [`../screenshots/flutter-test-final.txt`](../screenshots/flutter-test-final.txt).
+
+## 5b. Insiden: API key tertulis di kode sumber
+
+Kesalahan nyata yang terjadi **setelah** semua test hijau — ditemukan saat
+menguji manual, bukan oleh test:
+
+```dart
+// SALAH — konstanta ini adalah NAMA SLOT, bukan isi key
+static const _key = 'AQ.Ab8RN6J7…';
+
+// BENAR
+static const _key = 'gemini_api_key';
+```
+
+Dua dampak:
+
+1. Key masuk ke berkas yang bisa ter-commit. (Dicek: belum pernah masuk
+   history — `git log -S` kosong — lalu key di-revoke/diganti.)
+2. Aplikasi **tetap** melaporkan "API key belum diatur", karena `read()`
+   mencari slot yang namanya adalah key itu sendiri. Key tidak pernah
+   terbaca dari konstanta.
+
+**Akar masalah verifikasi:** grep sterilitas #4 hanya mencari `AIza…`,
+sedangkan key generasi baru berformat `AQ.…` sehingga lolos tanpa terdeteksi.
+Perbaikan berlapis:
+
+| Lapis | Perubahan |
+| --- | --- |
+| Kode | Konstanta dikembalikan ke `'gemini_api_key'` |
+| Grep | Pola menjadi `AIza[0-9A-Za-z_-]{20,}\|AQ\.[A-Za-z0-9_-]{20,}` |
+| Test | `no_hardcoded_secrets_test.dart` memindai seluruh `lib/` dan memastikan nama slot bukan key |
+
+Test penjaga dibuktikan **merah** pada kondisi yang salah sebelum diterima:
+
+```text
+Expected: empty
+  Actual: ['lib/features/assistant/data/ai/api_key_store.dart']
+Expected: false
+  Actual: <true>
+Nama slot "AQ.<REDACTED>" terlihat seperti API key.
+```
+
+Bukti: [`../screenshots/proof-secret-guard.txt`](../screenshots/proof-secret-guard.txt)
+(key pada output sengaja diredaksi sebelum disimpan).
+
+**Pelajaran:** "hijau" hanya sekuat cakupan pemeriksaannya. Aturan yang hanya
+dijaga grep manual akan bolong saat format data berubah; aturan yang penting
+harus dijadikan test.
 
 ## 6. AI Challenge — review kode final (6 temuan)
 

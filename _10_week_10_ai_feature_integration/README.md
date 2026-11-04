@@ -12,7 +12,7 @@ dokumentasi resmi, `flutter analyze`, dan test merah — lalu diperbaiki.
 
 > **Status uji live:** API key Gemini belum dibuat, sehingga panggilan nyata
 > ke model **belum** dijalankan. Semua yang bisa diuji tanpa jaringan
-> (domain, parsing, state, widget) sudah hijau: **68/68 test**. Klaim
+> (domain, parsing, state, widget) sudah hijau: **70/70 test**. Klaim
 > "end-to-end berjalan" sengaja **tidak** dibuat. Rincian: [`docs/ai-log.md`](docs/ai-log.md) §8.
 
 ## Fitur: chat asisten catatan
@@ -112,7 +112,7 @@ Pertanyaan: Apa isi catatan belanja?
 | Risiko | Dampak | Mitigasi di kode | Bukti |
 | --- | --- | --- | --- |
 | **Data pribadi bocor** ke AI API | NIK/email/telepon terkirim ke pihak ketiga | `PrivacyGuard.redact()` dijalankan di **use case** (bukan widget), sehingga tidak bisa dilewati pemanggil baru; riwayat chat tidak dikirim ulang | 10 test `privacy_guard_test.dart`; 2 test redaksi di `ask_assistant_test.dart` |
-| **API key bocor** | Kuota/akun disalahgunakan | Key disimpan di `flutter_secure_storage`; dikirim lewat header `x-goog-api-key`, **bukan** `?key=`; tidak ada key di kode/log | Grep `AIza...` = NOL; test "key tidak ada di URL" |
+| **API key bocor** | Kuota/akun disalahgunakan | Key disimpan di `flutter_secure_storage`; dikirim lewat header `x-goog-api-key`, **bukan** `?key=`; tidak ada key di kode/log; dijaga test `no_hardcoded_secrets_test.dart` | Grep `AIza…` + `AQ.…` = NOL; test penjaga merah bila key ditempel |
 | **Biaya melonjak** | Tagihan tak terduga | Maks. 5 catatan + 1500 karakter per catatan; jawaban diminta ≤3 kalimat; tanpa multi-turn; timeout 20 s | 10 test `ask_assistant_test.dart` |
 | **API error / down** | Fitur macet | Semua status HTTP dipetakan ke pesan ramah; 5xx/timeout/`ClientException` → `retryable` + tombol "Coba lagi"; tidak ada exception mentah ke widget | 17 test `gemini_repository_test.dart` |
 | **Prompt diblokir safety** | Respons tanpa `candidates` | Parsing defensif: cek `promptFeedback.blockReason`, panjang `candidates`/`parts` sebelum indeks 0 | `proof-candidates-crash.txt` + test |
@@ -154,6 +154,21 @@ Pertanyaan: Apa isi catatan belanja?
 | 7 | Tanpa redaksi & batas konteks | 10 test `privacy_guard_test.dart` |
 | 8 | Retry menggandakan bubble pengguna | [`screenshots/proof-retry-duplicate.txt`](screenshots/proof-retry-duplicate.txt) — `Expected: <1>, Actual: <2>` |
 
+### Insiden nyata: API key ditempel ke nama slot
+
+Saat menguji fitur secara manual, API key sempat ditempel ke konstanta
+`_key` di `api_key_store.dart` — padahal konstanta itu **nama slot**
+penyimpanan, bukan isinya. Akibatnya key masuk ke kode sumber (dan
+`read()` akan mencari slot bernama key tersebut, sehingga aplikasi tetap
+menganggap key "belum diatur"). Grep lama tidak menangkapnya karena hanya
+mencari format `AIza…`, sementara key baru berformat `AQ.…`.
+
+Perbaikan: konstanta dikembalikan ke `'gemini_api_key'`, pola grep diperluas
+ke `AQ\.[A-Za-z0-9_-]{20,}`, dan ditambahkan test penjaga
+`test/no_hardcoded_secrets_test.dart` (2 test) yang memindai seluruh `lib/`
+dan memastikan nama slot bukan API key. Test itu dibuktikan **merah** pada
+kondisi yang salah: [`screenshots/proof-secret-guard.txt`](screenshots/proof-secret-guard.txt).
+
 ## Struktur file
 
 ```text
@@ -180,7 +195,8 @@ test/
 ├── privacy_guard_test.dart        # BARU — 10
 ├── ask_assistant_test.dart        # BARU — 10
 ├── gemini_repository_test.dart    # BARU — 17
-└── assistant_widget_test.dart     # BARU — 8
+├── assistant_widget_test.dart     # BARU — 8
+└── no_hardcoded_secrets_test.dart # BARU — 2 (penjaga API key)
 ```
 
 ## Stack teknologi
@@ -201,7 +217,7 @@ test/
 cd _10_week_10_ai_feature_integration
 flutter pub get
 flutter analyze
-flutter test          # 68 test
+flutter test          # 70 test
 flutter run
 ```
 
@@ -216,20 +232,28 @@ Mengatur API key (setelah aplikasi berjalan):
 > menempelkan key ke kode sumber, README, atau commit. Untuk mencabut akses,
 > hapus key lewat tombol hapus di Pengaturan **dan** revoke di AI Studio.
 
+**Jangan** mengisi key ke konstanta `_key` di
+`lib/features/assistant/data/ai/api_key_store.dart`. Konstanta itu **nama
+slot** di Keychain/Keystore (`'gemini_api_key'`), bukan isi key. Kalau diisi
+API key, aplikasi tetap melaporkan "API key belum diatur" dan key bocor ke
+kode sumber. Key hanya masuk lewat halaman Pengaturan saat aplikasi berjalan.
+Test `no_hardcoded_secrets_test.dart` menjaga kesalahan ini agar tidak
+terulang.
+
 ## Bukti mesin hijau
 
 | Perintah | Hasil |
 | --- | --- |
 | `flutter analyze` | 0 error, 0 warning — sisa 1 info `package_names` bawaan nama folder repo |
-| `dart format --set-exit-if-changed .` | exit 0 — `Formatted 37 files (0 changed)` |
-| `flutter test` | **68/68 lulus** (23 lama + 45 baru) |
+| `dart format --set-exit-if-changed .` | exit 0 — `Formatted 38 files (0 changed)` |
+| `flutter test` | **70/70 lulus** (23 lama + 47 baru) |
 | 5 grep sterilitas | **NOL** semua |
 
 ```text
 === GREP 1: presentation steril dari data mentah ===         NOL
 === GREP 2: domain steril dari framework/package ===         NOL
 === GREP 3: widget tidak instansiasi repository ===           NOL
-=== GREP 4: API key tidak pernah di kode sumber ===           NOL
+=== GREP 4: API key tidak di kode (AIza… + AQ.…) ===         NOL
 === GREP 5: tidak ada ?key= di URL ===                        NOL
 ```
 
