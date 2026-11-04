@@ -1,0 +1,29 @@
+Dokumentasi resmi Gemini API — https://ai.google.dev/gemini-api/docs/models
+Diambil: 4 November 2026
+
+1) Model yang dipakai project ini ADA dan berstatus "Stable"
+   ------------------------------------------------------------------
+   Nama      : Gemini 3.5 Flash-Lite
+   Deskripsi : "Our fastest, most cost-effective 3.5 model for
+                high-throughput execution."
+   Badge     : Stable
+   Endpoint  : gemini-3.5-flash-lite
+
+2) Model dari contoh codelab TIDAK ADA lagi
+   ------------------------------------------------------------------
+   "gemini-pro" tidak muncul di halaman Models maupun di halaman
+   Deprecations. Endpoint lama ini sudah dimatikan (retired), sehingga
+   request ke model tersebut tidak akan pernah menghasilkan jawaban.
+
+3) Peringatan resmi untuk kandidat lain (gemini-2.5-flash)
+   ------------------------------------------------------------------
+   "gemini-2.5-flash is deprecated and is no longer available to select
+    in Google AI Studio. Effective December 1, 2026, all API requests to
+    gemini-2.5-flash will automatically route to gemini-3.5-flash-lite."
+   Sumber: https://ai.google.dev/gemini-api/docs/deprecations
+
+KESIMPULAN
+   Memakai "gemini-pro" (kode contoh codelab) = gagal total karena model
+   sudah pensiun. Memakai "gemini-2.5-flash" = berisiko karena sudah
+   deprecated. Project ini memakai "gemini-3.5-flash-lite" yang berstatus
+   Stable dan menjadi tujuan migrasi resmi dari 2.5 Flash.

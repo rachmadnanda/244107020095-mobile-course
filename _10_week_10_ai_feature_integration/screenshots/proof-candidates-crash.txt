@@ -1,0 +1,17 @@
+00:00 +0: loading /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_10_week_10_ai_feature_integration/test/naive_parsing_proof_test.dart
+00:00 +0: kode contoh codelab: prompt diblokir safety harus jadi failure ramah
+00:00 +0 -1: kode contoh codelab: prompt diblokir safety harus jadi failure ramah [E]
+  Expected: return normally
+    Actual: <Closure: () => String>
+     Which: threw NoSuchMethodError:<NoSuchMethodError: The method '[]' was called on null.
+            Receiver: null
+            Tried calling: [](0)>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/naive_parsing_proof_test.dart 24:5             main.<fn>
+  
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_10_week_10_ai_feature_integration/test/naive_parsing_proof_test.dart: kode contoh codelab: prompt diblokir safety harus jadi failure ramah
