@@ -1,0 +1,51 @@
+# Ringkasan memori — 11 November 2026
+#
+# Sumber: adb shell dumpsys meminfo <package>
+# Perangkat: emulator-5554, Android 15 (API 35)
+# Beban: 1.000 catatan (SEED_NOTES=1000), build profile
+# Kolom "Heap Alloc" = total heap yang dialokasikan proses (KB).
+#
+# Catatan: PSS total sangat dipengaruhi reclaim halaman bersih APK, sehingga
+# hanya Heap Alloc yang dipakai untuk membandingkan. Baseline dan optimized
+# dibangun sebagai APK terpisah, jadi selisih kecil diperlakukan sebagai
+# indikasi, bukan klaim kausal.
+
+## Baseline (com.example.week11_baseline)
+
+# Saat idle setelah daftar termuat
+TOTAL PSS          : 129121 KB
+Native Heap Pss    : 32621 KB
+Dalvik Heap Pss    : 1837 KB
+Heap Alloc         : 46923 KB
+Heap Free          : 5205 KB
+
+# Setelah buka detail -> kembali, 5 kali
+TOTAL PSS          : 137913 KB
+Native Heap Pss    : 32727 KB
+Dalvik Heap Pss    : 7195 KB
+Heap Alloc         : 46881 KB
+Heap Free          : 5391 KB
+
+## Sesudah optimasi (com.example.u_11_week_11_performance_optimization)
+
+# Saat idle setelah daftar termuat
+TOTAL PSS          : 137750 KB
+Native Heap Pss    : 29741 KB
+Dalvik Heap Pss    : 5341 KB
+Heap Alloc         : 43992 KB
+Heap Free          : 4917 KB
+
+# Setelah buka detail -> kembali, 5 kali
+TOTAL PSS          : 130612 KB
+Native Heap Pss    : 29995 KB
+Dalvik Heap Pss    : 6527 KB
+Heap Alloc         : 44049 KB
+Heap Free          : 5124 KB
+
+## Interpretasi
+
+- Heap Alloc optimized ~6,3% lebih rendah saat idle (43.992 vs 46.923 KB).
+- Keduanya tidak menunjukkan pertumbuhan liar pada 5 navigasi; objek `Note`
+  terlalu kecil untuk terlihat dalam 5 sampel.
+- Bukti utama pelepasan provider detail adalah test otomatis
+  (test/provider_disposal_test.dart), bukan selisih PSS.

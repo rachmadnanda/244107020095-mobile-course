@@ -1,0 +1,10 @@
+--------- beginning of main
+11-11 22:40:32.642  6814  6814 I flutter : [PERF] frames=125 build_p50=1.26ms build_p90=4.01ms raster_p50=16.47ms raster_p90=24.44ms total_p50=24.23ms total_p90=41.81ms jank16=95.2% jank32=19.2%
+11-11 22:40:34.792  6814  6814 I flutter : [PERF] frames=121 build_p50=1.34ms build_p90=3.99ms raster_p50=16.36ms raster_p90=20.02ms total_p50=23.81ms total_p90=32.59ms jank16=95.9% jank32=9.1%
+11-11 22:40:36.909  6814  6814 I flutter : [PERF] frames=120 build_p50=1.25ms build_p90=3.97ms raster_p50=16.73ms raster_p90=20.73ms total_p50=24.38ms total_p90=31.44ms jank16=99.2% jank32=7.5%
+11-11 22:40:39.410  6814  6814 I flutter : [PERF] frames=123 build_p50=1.36ms build_p90=4.37ms raster_p50=17.10ms raster_p90=26.71ms total_p50=24.52ms total_p90=45.20ms jank16=100.0% jank32=25.2%
+11-11 22:40:41.697  6814  6814 I flutter : [PERF] frames=124 build_p50=1.35ms build_p90=4.14ms raster_p50=16.36ms raster_p90=21.34ms total_p50=24.27ms total_p90=41.81ms jank16=100.0% jank32=13.7%
+11-11 22:40:44.023  6814  6814 I flutter : [PERF] frames=125 build_p50=1.31ms build_p90=3.40ms raster_p50=16.84ms raster_p90=22.82ms total_p50=25.61ms total_p90=41.91ms jank16=99.2% jank32=18.4%
+11-11 22:40:46.909  6814  6814 I flutter : [PERF] frames=125 build_p50=1.71ms build_p90=6.01ms raster_p50=17.46ms raster_p90=32.83ms total_p50=27.24ms total_p90=62.45ms jank16=96.0% jank32=32.8%
+11-11 22:40:50.006  6814  6814 I flutter : [PERF] frames=120 build_p50=1.67ms build_p90=5.45ms raster_p50=18.69ms raster_p90=42.86ms total_p50=33.27ms total_p90=75.60ms jank16=95.8% jank32=49.2%
+11-11 22:40:52.233  6814  6814 I flutter : [PERF] frames=126 build_p50=1.32ms build_p90=3.12ms raster_p50=15.61ms raster_p90=20.70ms total_p50=23.83ms total_p90=30.80ms jank16=76.2% jank32=7.9%
