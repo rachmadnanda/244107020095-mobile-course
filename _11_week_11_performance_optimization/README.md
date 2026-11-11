@@ -29,12 +29,76 @@ Skenario identik untuk baseline dan sesudah optimasi:
 | Jank > 32 ms | 18,4% | 16,0% | **−13,0%** |
 | Jank > 16 ms | 96,0% | 90,0% | −6,3% |
 
+Rincian lengkap (baseline, temuan, trade-off, memori, lampiran reproduksi)
+ada di [`docs/performance-report.md`](docs/performance-report.md). Log mentah
+9 jendela per build: [`screenshots/before-scroll-metrics.txt`](screenshots/before-scroll-metrics.txt)
+dan [`screenshots/after-scroll-metrics.txt`](screenshots/after-scroll-metrics.txt).
+
 **Kesimpulan yang jujur:** daftar catatan sudah memakai `ListView.builder`,
 jadi scroll memang **didominasi raster thread emulator** (p50 ≈ 16 ms) dan
 optimasi rebuild tidak mengubah FPS scroll secara dramatis. Perbaikan nyata
 ada pada **lingkup rebuild saat berinteraksi**, **biaya update state setelah
 tambah/hapus/sinkron**, dan **umur hidup objek di memori** — dibuktikan dengan
 test otomatis, bukan hanya angka frame.
+
+## Bukti screenshot
+
+Semua diambil dari emulator Android 15 (API 35, 1080×2280) pada
+11 November 2026, build profile, beban 1.000 catatan. File asli, kondisi
+pengukuran, dan detail frame ada di [`screenshots/README.md`](screenshots/README.md).
+
+**Daftar catatan — baseline vs sesudah optimasi**
+
+| Baseline (Week 10) | Sesudah optimasi |
+| --- | --- |
+| ![Daftar catatan baseline](screenshots/before-home.png) | ![Daftar catatan sesudah optimasi](screenshots/after-home.png) |
+| ±4 catatan per layar; judul dan isi tampil penuh, tinggi tile tidak seragam | ±9 catatan per layar; judul 1 baris + isi 2 baris dengan elipsis, tinggi tile seragam |
+
+**DevTools — Performance → Frame Analysis**
+
+| Baseline — frame 645 | Sesudah — frame 578 |
+| --- | --- |
+| ![DevTools baseline frame 645](screenshots/before-profile.png) | ![DevTools sesudah frame 578](screenshots/after-profile.png) |
+| UI 2,0 ms · Raster **23,9 ms** (raster jank) | UI 2,1 ms · Raster **19,6 ms** (tooltip; bilah fase 19,7 ms) |
+
+Keduanya memilih frame saat scroll dengan skenario rekaman identik (8× swipe
+atas, 8× swipe bawah, buka detail → kembali, ketik `catatan`). Rata-rata FPS
+pada header rekaman (41 vs 36) **tidak** dipakai sebagai pembanding karena
+cakupan transisi halaman berbeda dan emulator berderau; pembanding yang sah
+adalah 9 jendela terkontrol di tabel sebelumnya.
+
+## Memori
+
+Diukur dengan `adb shell dumpsys meminfo <paket>` pada beban 1.000 catatan.
+Kolom **Heap Alloc** dipakai karena lebih stabil daripada PSS (PSS sangat
+dipengaruhi reclaim halaman bersih APK):
+
+| Kondisi | Baseline | Sesudah | Selisih |
+| --- | ---: | ---: | ---: |
+| Idle setelah daftar termuat | 46.923 KB | 43.992 KB | −2.931 KB (−6,3%) |
+| Setelah buka–tutup detail 5× | 46.881 KB | 44.049 KB | −2.832 KB (−6,0%) |
+
+Kedua build tidak menunjukkan pertumbuhan liar pada 5 navigasi; objek `Note`
+terlalu kecil untuk terlihat dalam sampel itu. Karena baseline dan versi
+optimasi adalah dua APK terpisah, selisih ini diperlakukan sebagai
+**indikasi**, bukan klaim kausal. Bukti utama pelepasan provider detail adalah
+`test/provider_disposal_test.dart`. Ringkasan mentah:
+[`screenshots/memory-metrics.txt`](screenshots/memory-metrics.txt).
+
+## Trade-off dan keterbatasan
+
+| Keputusan | Keuntungan | Biaya |
+| --- | --- | --- |
+| Halaman dipecah menjadi 4 widget | Rebuild terbatas, mudah diuji | Lebih banyak berkas/kelas kecil |
+| Update state lokal setelah mutasi | Tanpa query ulang | State harus dijaga konsisten dengan database |
+| `isAutoDispose` untuk detail | Memori tidak menumpuk | Detail dimuat ulang saat dibuka lagi (satu query by-id, murah) |
+| Riwayat chat dibatasi 200 pesan | Memori/rebuild konstan | Pesan lama hilang dari sesi (bukan dari penyimpanan) |
+| Optimistic dark-mode | Satu rebuild, tanpa kedip | Kegagalan tulis hanya dicatat di log |
+
+Keterbatasan pengukuran: hanya satu emulator, 9 jendela per build, dan variasi
+beban emulator cukup besar (jank32 sesudah berkisar 5–35%). Perangkat fisik
+bisa memberi angka berbeda, terutama pada raster thread. Karena itu klaim
+dibatasi pada arah perubahan, bukan angka absolut.
 
 ## Optimasi yang diterapkan
 
@@ -155,6 +219,15 @@ Test baru untuk minggu ini:
   cara mereproduksi.
 - [`screenshots/README.md`](screenshots/README.md) — inventaris bukti dan
   detail frame DevTools yang dipilih.
+
+## Penggunaan AI dan verifikasi
+
+AI dipakai untuk membantu membaca hasil profiling, mengusulkan kandidat
+optimasi, dan menyusun dokumentasi. Semua usulan diverifikasi ulang dengan
+`dart format`, `flutter analyze`, **85 test**, dan profiling nyata di emulator;
+tidak ada angka atau screenshot yang dibuat-buat. Klaim yang tidak didukung
+data (misalnya “FPS naik 2×”) tidak dimasukkan. Rincian ada di
+[`docs/performance-report.md`](docs/performance-report.md) §7.
 
 ## Refleksi singkat
 
