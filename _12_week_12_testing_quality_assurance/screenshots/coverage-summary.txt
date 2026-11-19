@@ -1,0 +1,4 @@
+== Ringkasan coverage (baris) ==
+Baris : 477/566 (84.3%)
+
+== Per file (urut persentase) ==

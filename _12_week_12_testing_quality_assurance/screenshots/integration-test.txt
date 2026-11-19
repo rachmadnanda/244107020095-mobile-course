@@ -1,0 +1,8 @@
+00:00 +0: loading /home/nanda/nanda/POLINEMA/SEM5/Pemrograman Mobile/244107020095-mobile-course/_12_week_12_testing_quality_assurance/integration_test/app_test.dart
+Running Gradle task 'assembleDebug'...                             56.1s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...           3.6s
+00:00 +0: (setUpAll)
+00:00 +0: alur utama: tambah catatan, buka detail, lalu cari
+00:11 +1: (tearDownAll)
+00:16 +1: All tests passed!
