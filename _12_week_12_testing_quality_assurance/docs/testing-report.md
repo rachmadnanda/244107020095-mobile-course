@@ -169,7 +169,19 @@ $ flutter test integration_test/app_test.dart -d emulator-5554
 00:16 +1: All tests passed!
 ```
 
-Log lengkap ada di [`../screenshots/`](../screenshots/README.md).
+Tangkapan layar tiap langkah:
+
+| Langkah | Tangkapan layar |
+| --- | --- |
+| Format + analisis | ![format dan analyze](../screenshots/01-format-analyze.png) |
+| Test unit + widget | ![flutter test](../screenshots/02-flutter-test.png) |
+| Integration test | ![integration test](../screenshots/03-integration-test.png) |
+| Cakupan | ![coverage](../screenshots/04-coverage.png) |
+
+Log lengkap ada di [`../screenshots/`](../screenshots/README.md). Durasi di
+tangkapan layar berasal dari eksekusi saat gambar diambil (contoh: `00:11 +95`
+dan `01:19 +1` termasuk build), sedangkan blok teks di atas berasal dari log
+lain pada hari yang sama; jumlah test yang lulus tetap sama.
 
 ## 8. Batasan dan temuan terbuka
 

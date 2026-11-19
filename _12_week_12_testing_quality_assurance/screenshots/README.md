@@ -1,23 +1,33 @@
 # Bukti — Week 12
 
-Semua berkas di folder ini adalah **output mentah** dari perintah yang
-dijalankan pada 19 November 2026. Tidak ada nilai yang diubah setelah
-pengambilan.
+Folder ini berisi dua bentuk bukti dari eksekusi yang sama pada 19 November
+2026:
+
+- **`.png`** — tangkapan layar terminal sungguhan (jendela `foot` di sesi
+  Wayland), diambil dengan `grim` setelah perintah selesai. Tidak ada gambar
+  yang disusun atau diedit; yang terlihat adalah keluaran apa adanya.
+- **`.txt`** — log teks mentah yang bisa dibaca, dicari, dan dibandingkan
+  (diambil dengan `tee`).
 
 ## Daftar berkas
 
 | Berkas | Isi |
 | --- | --- |
-| `analyze-format.txt` | Output `dart format --set-exit-if-changed .` dan `flutter analyze` |
-| `unit-widget-tests.txt` | Output lengkap `flutter test` (95 test) |
-| `integration-test.txt` | Output `flutter test integration_test/app_test.dart` di emulator |
-| `coverage-run.txt` | Output `flutter test --coverage` |
+| `01-format-analyze.png` | `dart format --set-exit-if-changed .` dan `flutter analyze` |
+| `02-flutter-test.png` | `flutter test --reporter expanded` — 95 test lulus |
+| `03-integration-test.png` | `flutter test integration_test/app_test.dart -d emulator-5554` — 1 test lulus |
+| `04-coverage.png` | `flutter test --coverage` + `./tool/coverage_summary.sh` — 477/566 (84,3%) |
+| `analyze-format.txt` | Log teks format + analyze |
+| `unit-widget-tests.txt` | Log teks lengkap `flutter test` (95 test) |
+| `integration-test.txt` | Log teks integration test |
+| `coverage-run.txt` | Log teks `flutter test --coverage` |
 | `coverage-summary.txt` | Ringkasan cakupan baris |
 | `coverage-per-file.txt` | Cakupan per file dari `coverage/lcov.info` |
 
-Bukti berbentuk **log teks**, bukan screenshot UI, karena objek yang diuji
-adalah perilaku test dan hasil perintah. Setiap angka bisa diverifikasi ulang
-dengan perintah di [`../README.md`](../README.md).
+Semua angka bisa diverifikasi ulang dengan perintah di
+[`../README.md`](../README.md). Durasi di tangkapan layar berasal dari eksekusi
+saat gambar diambil; log teks berasal dari eksekusi lain pada hari yang sama,
+jadi detiknya bisa berbeda walaupun jumlah test yang lulus sama.
 
 ## Kondisi pengujian
 
@@ -43,8 +53,8 @@ flutter test integration_test/app_test.dart -d emulator-5554
 Hasil yang diharapkan:
 
 ```text
-00:14 +95: All tests passed!          # unit + widget
-00:16 +1: All tests passed!           # integration (termasuk build)
+00:11 +95: All tests passed!          # unit + widget
+01:19 +1: All tests passed!           # integration (termasuk build)
 Baris : 477/566 (84.3%)               # coverage
 ```
 

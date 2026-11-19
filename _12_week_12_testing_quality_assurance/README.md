@@ -9,8 +9,9 @@ sebagai bahan evaluasi.
 > `dart format` bersih · `flutter analyze` **No issues found** ·
 > **95/95 test unit + widget lulus** · **1/1 integration test lulus** di
 > emulator Android 15 (API 35) · cakupan baris **84,3%** (477/566 baris yang
-> tercatat di `lcov`). Bukti mentah ada di [`screenshots/`](screenshots/README.md),
-> rincian skenario di [`docs/testing-report.md`](docs/testing-report.md).
+> tercatat di `lcov`). Tangkapan layar dan log mentah ada di
+> [`screenshots/`](screenshots/README.md), rincian skenario di
+> [`docs/testing-report.md`](docs/testing-report.md).
 
 ## Pemetaan 8 halaman modul
 
@@ -167,6 +168,8 @@ Hasil:
 Log mentah:
 [`screenshots/coverage-summary.txt`](screenshots/coverage-summary.txt) dan
 [`screenshots/coverage-per-file.txt`](screenshots/coverage-per-file.txt).
+Tangkapan layarnya:
+[`screenshots/04-coverage.png`](screenshots/04-coverage.png).
 
 ## Hasil pemeriksaan
 
@@ -178,16 +181,36 @@ flutter analyze
 # No issues found!
 
 flutter test
-# 00:14 +95: All tests passed!
+# 00:11 +95: All tests passed!
 
 flutter test integration_test/app_test.dart -d emulator-5554
-# 00:16 +1: All tests passed!
+# 00:53 build APK, 01:19 +1: All tests passed!
 ```
 
-Bukti lengkap:
+Waktu yang tertera adalah durasi nyata saat tangkapan layar diambil; tiap
+eksekusi bisa sedikit berbeda. Jumlah test yang lulus selalu sama.
+
+### 1. Format dan analisis statis
+
+![Hasil dart format dan flutter analyze](screenshots/01-format-analyze.png)
+
+### 2. Test unit dan widget — 95 lulus
+
+![Hasil flutter test 95 lulus](screenshots/02-flutter-test.png)
+
+### 3. Integration test di emulator — 1 lulus
+
+![Hasil integration test](screenshots/03-integration-test.png)
+
+### 4. Cakupan baris — 477/566 (84,3%)
+
+![Ringkasan cakupan](screenshots/04-coverage.png)
+
+Log teks mentah (untuk verifikasi ulang isi keluaran):
 [`screenshots/analyze-format.txt`](screenshots/analyze-format.txt),
 [`screenshots/unit-widget-tests.txt`](screenshots/unit-widget-tests.txt),
-[`screenshots/integration-test.txt`](screenshots/integration-test.txt).
+[`screenshots/integration-test.txt`](screenshots/integration-test.txt),
+[`screenshots/coverage-run.txt`](screenshots/coverage-run.txt).
 
 ## Temuan yang belum terselesaikan
 
@@ -274,7 +297,7 @@ tool/
 └── coverage_summary.sh                 # ringkasan lcov tanpa paket tambahan
 docs/
 └── testing-report.md                   # matriks skenario & analisis
-screenshots/                            # log mentah hasil perintah
+screenshots/                            # tangkapan layar (.png) + log mentah (.txt)
 ```
 
 ## Dokumentasi
@@ -283,9 +306,15 @@ screenshots/                            # log mentah hasil perintah
   desain fake, analisis coverage, dan batasan.
 - [`screenshots/README.md`](screenshots/README.md) — inventaris bukti dan
   kondisi pengukuran.
-- [`screenshots/unit-widget-tests.txt`](screenshots/unit-widget-tests.txt) —
-  output `flutter test`.
-- [`screenshots/integration-test.txt`](screenshots/integration-test.txt) —
-  output integration test.
-- [`screenshots/coverage-summary.txt`](screenshots/coverage-summary.txt) —
+- [`screenshots/02-flutter-test.png`](screenshots/02-flutter-test.png) —
+  tangkapan layar `flutter test` (95 lulus).
+- [`screenshots/03-integration-test.png`](screenshots/03-integration-test.png) —
+  tangkapan layar integration test (1 lulus).
+- [`screenshots/04-coverage.png`](screenshots/04-coverage.png) — tangkapan layar
   ringkasan cakupan.
+- [`screenshots/unit-widget-tests.txt`](screenshots/unit-widget-tests.txt) —
+  log teks `flutter test`.
+- [`screenshots/integration-test.txt`](screenshots/integration-test.txt) —
+  log teks integration test.
+- [`screenshots/coverage-summary.txt`](screenshots/coverage-summary.txt) —
+  ringkasan cakupan dalam teks.
