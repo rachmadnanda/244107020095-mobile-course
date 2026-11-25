@@ -1,0 +1,61 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # Aplikasi Week 13 ada di subfolder, bukan di root repository.
+        working-directory: _13_week_13_ci_cd_automation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Siapkan Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Ambil dependensi
+        run: flutter pub get
+
+      - name: Periksa format
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analisis statis
+        run: flutter analyze --fatal-infos
+
+      - name: Jalankan test
+        run: flutter test --coverage
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Build App Bundle
+        run: flutter build appbundle --release
+
+      - name: Unggah artefak
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-builds
+          # Step `uses:` mengabaikan `defaults.run.working-directory`,
+          # jadi path harus memakai prefix folder aplikasi.
+          path: |
+            _13_week_13_ci_cd_automation/build/app/outputs/flutter-apk/app-release.apk
+            _13_week_13_ci_cd_automation/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
