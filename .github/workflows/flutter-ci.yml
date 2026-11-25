@@ -28,7 +28,12 @@ jobs:
       - name: Siapkan Flutter
         uses: subosito/flutter-action@v2
         with:
+          # Versi dipatok agar hasil CI dapat direproduksi: `channel: stable`
+          # ikut berubah setiap ada rilis baru dan pernah membuat job gagal
+          # hanya karena SDK naik (lihat docs/ci-cd-report.md).
+          flutter-version: 3.50.1
           channel: stable
+          cache: true
 
       - name: Ambil dependensi
         run: flutter pub get
