@@ -6,14 +6,12 @@ menjalankan pemeriksaan dan build secara otomatis** setiap ada perubahan, lalu
 menyimpan APK/AAB sebagai artefak yang bisa ditinjau.
 
 > **Status verifikasi (25 November 2026):**
-> workflow `Flutter CI` **hijau** pada commit `a716bb4`, `2cec604`, dan
-> `12769ee` — run
+> workflow `Flutter CI` **hijau** pada lima commit berturut-turut setelah
+> perbaikan — run
 > [#2](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45553405020)
-> (7m 14s),
-> [#3](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45557977150)
-> (5m 12s), dan
-> [#4](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45558995522)
-> (6m 0s); artefak `android-builds` 72,6 MB pada tiap run.
+> sampai
+> [#5](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45559999577),
+> artefak `android-builds` 72,6 MB pada tiap run.
 > Tag `v1.0.1` menunjuk `a716bb4`.
 > Bukti tangkapan layar ada di [`screenshots/`](screenshots/README.md),
 > analisis lengkap di [`docs/ci-cd-report.md`](docs/ci-cd-report.md).
@@ -112,21 +110,24 @@ diterapkan ke repo: analyze bersih, 95/95 test lulus, APK dan AAB terbangun.
 
 ## Hasil run
 
-| | Run #1 | Run #2 | Run #3 | Run #4 |
-| --- | --- | --- | --- | --- |
-| Commit | `79284c6` | `a716bb4` | `2cec604` | `12769ee` |
-| Isi commit | workflow pertama | migrasi + AGP + pin versi | dokumentasi | dokumentasi |
-| Hasil | ❌ failure | ✅ **success** | ✅ **success** | ✅ **success** |
-| Durasi | 1m 9s | 7m 14s | 5m 12s | 6m 0s |
-| Gagal di | Analisis statis | — | — | — |
-| Artefak | – | 72,6 MB | 72,6 MB | 72,6 MB |
+| | Run #1 | Run #2 | Run #3 | Run #4 | Run #5 |
+| --- | --- | --- | --- | --- | --- |
+| Commit | `79284c6` | `a716bb4` | `2cec604` | `12769ee` | `55716ec` |
+| Isi commit | workflow pertama | migrasi + AGP + pin versi | dokumentasi | dokumentasi | dokumentasi |
+| Hasil | ❌ failure | ✅ **success** | ✅ **success** | ✅ **success** | ✅ **success** |
+| Durasi | 1m 9s | 7m 14s | 5m 12s | 6m 0s | 4m 29s |
+| Gagal di | Analisis statis | — | — | — | — |
+| Artefak | – | 72,6 MB | 72,6 MB | 72,6 MB | 72,6 MB |
 
-Run #3 dan #4 penting sebagai bukti tambahan: commit yang **hanya menyentuh
-dokumentasi** tetap menjalankan seluruh pipeline dan tetap hijau, sehingga
-artefak selalu berasal dari source yang sudah diverifikasi. Konsekuensinya,
-setiap commit dokumentasi berikutnya — termasuk commit yang menulis tabel ini —
-akan memicu run baru. Karena itu tabel di atas sengaja berhenti di #4: polanya
-sudah terbukti, dan menambah baris hanya akan terus bergeser.
+Setelah `a716bb4`, **tidak ada satu pun run yang merah**. Run #3–#5 adalah
+commit dokumentasi, dan semuanya tetap menjalankan format, analisis, 95 test,
+serta build — pipeline tidak membedakan "commit penting" dan "commit
+dokumentasi".
+
+Karena setiap commit memicu run baru, commit dokumentasi terakhir memakai
+penanda `[skip ci]`. Itu keputusan sadar: tujuannya menghentikan rantai run
+yang hanya mengubah Markdown, bukan menghindari pemeriksaan. Kode aplikasi
+tidak berubah pada commit tersebut.
 
 Run #2 — seluruh 10 step hijau:
 
@@ -157,6 +158,10 @@ retensi 7 hari.
 **Run #4 (commit dokumentasi berikutnya)** — juga hijau, 6m 0s:
 
 ![Run keempat hijau](screenshots/gh-06-run-4.png)
+
+**Run #5 (commit dokumentasi terakhir)** — juga hijau, 4m 29s:
+
+![Run kelima hijau](screenshots/gh-07-run-5.png)
 
 **Detail step run #2** — sepuluh langkah, semuanya hijau:
 

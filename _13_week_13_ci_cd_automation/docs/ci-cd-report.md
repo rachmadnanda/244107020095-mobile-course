@@ -127,24 +127,27 @@ di perangkat.
 
 ## 4. Hasil run
 
-| | Run #1 | Run #2 | Run #3 | Run #4 |
-| --- | --- | --- | --- | --- |
-| URL | `45547458858` | `45553405020` | `45557977150` | `45558995522` |
-| Commit | `79284c6` | `a716bb4` | `2cec604` | `12769ee` |
-| Event | push ke `main` | push ke `main` | push ke `main` | push ke `main` |
-| Hasil | ❌ failure | ✅ success | ✅ success | ✅ success |
-| Durasi | 1m 9s | 7m 14s | 5m 12s | 6m 0s |
-| Step gagal | Analisis statis | — | — | — |
-| Artefak | – | 72,6 MB | 72,6 MB | 72,6 MB |
+| | Run #1 | Run #2 | Run #3 | Run #4 | Run #5 |
+| --- | --- | --- | --- | --- | --- |
+| URL | `45547458858` | `45553405020` | `45557977150` | `45558995522` | `45559999577` |
+| Commit | `79284c6` | `a716bb4` | `2cec604` | `12769ee` | `55716ec` |
+| Event | push ke `main` | push ke `main` | push ke `main` | push ke `main` | push ke `main` |
+| Hasil | ❌ failure | ✅ success | ✅ success | ✅ success | ✅ success |
+| Durasi | 1m 9s | 7m 14s | 5m 12s | 6m 0s | 4m 29s |
+| Step gagal | Analisis statis | — | — | — | — |
+| Artefak | – | 72,6 MB | 72,6 MB | 72,6 MB | 72,6 MB |
 
-Run #3 dan #4 membuktikan hal yang mudah terlewat: commit yang hanya mengubah
+Run #3–#5 membuktikan hal yang mudah terlewat: commit yang hanya mengubah
 Markdown tetap menjalankan format, analisis, 95 test, dan build. Pipeline tidak
 membedakan "commit penting" dan "commit dokumentasi".
 
-Efek sampingnya: setiap commit dokumentasi memicu run baru. Karena itu tabel
-ini berhenti di #4 — polanya sudah terbukti, dan menambah baris hanya membuat
-tabel terus bergeser. Yang penting bukan nomor run terakhir, melainkan bahwa
-**setelah `a716bb4` tidak ada lagi run yang merah**.
+Karena setiap commit memicu run baru, commit dokumentasi terakhir memakai
+penanda `[skip ci]`. Itu keputusan sadar untuk menghentikan rantai run yang
+hanya mengubah Markdown — bukan untuk menghindari pemeriksaan, karena kode
+aplikasi tidak berubah pada commit tersebut.
+
+Yang penting bukan nomor run terakhir, melainkan bahwa **setelah `a716bb4`
+tidak ada lagi run yang merah**.
 
 Step pada run #2, semuanya hijau:
 

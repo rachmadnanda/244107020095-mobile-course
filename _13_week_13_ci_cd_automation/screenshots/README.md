@@ -12,12 +12,13 @@ Dua jenis bukti, keduanya diambil 25 November 2026:
 
 | Berkas | Isi |
 | --- | --- |
-| `gh-01-runs.png` | Daftar run: #4, #3, #2 hijau; #1 merah; ci #1 lama merah |
+| `gh-01-runs.png` | Daftar run: #5, #4, #3, #2 hijau; #1 merah; ci #1 lama merah |
 | `gh-02-run-summary.png` | Ringkasan run #2: status Success, 7m 14s, artefak 72,6 MB |
 | `gh-03-run-steps.png` | 10 step run #2, semuanya hijau |
 | `gh-04-first-failure.png` | Run #1: step "Analisis statis" merah, step build `skipped` |
 | `gh-05-run-docs.png` | Run #3 (commit dokumentasi): Success, 5m 12s, artefak 72,6 MB |
 | `gh-06-run-4.png` | Run #4 (commit dokumentasi berikutnya): Success, 6m 0s, artefak 72,6 MB |
+| `gh-07-run-5.png` | Run #5 (commit dokumentasi terakhir): Success, 4m 29s, artefak 72,6 MB |
 | `01-cek-lokal.png` | Format, analyze, dan 95 test lokal dengan Flutter 3.50.1 |
 | `02-build-lokal.png` | Build lokal APK (52,1 MB) dan AAB (51,8 MB) dengan Flutter 3.50.1 |
 
@@ -25,12 +26,13 @@ Dua jenis bukti, keduanya diambil 25 November 2026:
 
 | Gambar | Yang terbaca |
 | --- | --- |
-| `gh-01-runs.png` | `Flutter CI #4` commit `12769ee`, 6m 0s · `#3` commit `2cec604`, 5m 12s · `#2` commit `a716bb4`, 7m 14s · `#1` commit `79284c6`, 1m 9s |
+| `gh-01-runs.png` | `Flutter CI #5` commit `55716ec`, 4m 29s · `#4` `12769ee`, 6m 0s · `#3` `2cec604`, 5m 12s · `#2` `a716bb4`, 7m 14s · `#1` `79284c6`, 1m 9s |
 | `gh-02-run-summary.png` | Status **Success**, total 7m 14s, Artifacts **1**, `android-builds` **72.6 MB**, digest `sha256:f0329404…` |
 | `gh-03-run-steps.png` | Set up job → Checkout → Siapkan Flutter → Ambil dependensi → Periksa format → Analisis statis → Jalankan test → Build APK → Build App Bundle → Unggah artefak → Complete job, semua ✅ |
 | `gh-04-first-failure.png` | Periksa format ✅ lalu **Analisis statis ❌**, Jalankan test sampai Unggah artefak `skipped` |
 | `gh-05-run-docs.png` | Status **Success**, total 5m 12s, Artifacts **1**, `android-builds` **72.6 MB**, digest `sha256:39e6c8ad…` |
 | `gh-06-run-4.png` | Status **Success**, total 6m 0s, Artifacts **1**, `android-builds` **72.6 MB**, digest `sha256:1732051e…` |
+| `gh-07-run-5.png` | Status **Success**, total 4m 29s, Artifacts **1** |
 | `01-cek-lokal.png` | `Formatted 52 files (0 changed)`, `No issues found!`, `00:17 +95: All tests passed!` |
 | `02-build-lokal.png` | `✓ Built ... app-release.apk (52.1MB)`, `✓ Built ... app-release.aab (51.8MB)`, `Flutter 3.50.1 • channel stable` |
 
