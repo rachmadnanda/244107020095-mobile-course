@@ -6,10 +6,12 @@ menjalankan pemeriksaan dan build secara otomatis** setiap ada perubahan, lalu
 menyimpan APK/AAB sebagai artefak yang bisa ditinjau.
 
 > **Status verifikasi (25 November 2026):**
-> workflow `Flutter CI` **hijau** pada commit `a716bb4` — run
-> [#2](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45553405020),
-> durasi 7m 14s, artefak `android-builds` 72,6 MB.
-> Tag `v1.0.1` menunjuk commit tersebut.
+> workflow `Flutter CI` **hijau** pada commit `a716bb4` dan `2cec604` —
+> run [#2](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45553405020)
+> (7m 14s) dan
+> [#3](https://github.com/rachmadnanda/244107020095-mobile-course/actions/runs/45557977150)
+> (5m 12s), artefak `android-builds` 72,6 MB.
+> Tag `v1.0.1` menunjuk `a716bb4`.
 > Bukti tangkapan layar ada di [`screenshots/`](screenshots/README.md),
 > analisis lengkap di [`docs/ci-cd-report.md`](docs/ci-cd-report.md).
 
@@ -107,13 +109,18 @@ diterapkan ke repo: analyze bersih, 95/95 test lulus, APK dan AAB terbangun.
 
 ## Hasil run
 
-| | Run #1 | Run #2 |
-| --- | --- | --- |
-| Commit | `79284c6` | `a716bb4` |
-| Hasil | ❌ failure | ✅ **success** |
-| Durasi | 1m 9s | **7m 14s** |
-| Gagal di | Analisis statis | — |
-| Artefak | – | `android-builds` (72,6 MB) |
+| | Run #1 | Run #2 | Run #3 |
+| --- | --- | --- | --- |
+| Commit | `79284c6` | `a716bb4` | `2cec604` |
+| Isi commit | workflow pertama | migrasi + AGP + pin versi | dokumentasi |
+| Hasil | ❌ failure | ✅ **success** | ✅ **success** |
+| Durasi | 1m 9s | 7m 14s | 5m 12s |
+| Gagal di | Analisis statis | — | — |
+| Artefak | – | `android-builds` (72,6 MB) | `android-builds` (72,6 MB) |
+
+Run #3 penting sebagai bukti tambahan: commit yang **hanya menyentuh
+dokumentasi** tetap menjalankan seluruh pipeline dan tetap hijau, sehingga
+artefak selalu berasal dari source yang sudah diverifikasi.
 
 Run #2 — seluruh 10 step hijau:
 
@@ -136,6 +143,10 @@ retensi 7 hari.
 **Ringkasan run #2** — Success, 7m 14s, satu artefak 72,6 MB:
 
 ![Ringkasan run hijau](screenshots/gh-02-run-summary.png)
+
+**Run #3 (commit dokumentasi)** — juga hijau, 5m 12s:
+
+![Run ketiga hijau](screenshots/gh-05-run-docs.png)
 
 **Detail step run #2** — sepuluh langkah, semuanya hijau:
 

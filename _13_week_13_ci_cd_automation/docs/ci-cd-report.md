@@ -127,15 +127,19 @@ di perangkat.
 
 ## 4. Hasil run
 
-| | Run #1 | Run #2 |
-| --- | --- | --- |
-| URL | `/actions/runs/45547458858` | `/actions/runs/45553405020` |
-| Commit | `79284c6` | `a716bb4` |
-| Event | push ke `main` | push ke `main` |
-| Hasil | ❌ failure | ✅ success |
-| Durasi | 1m 9s | 7m 14s |
-| Step gagal | Analisis statis | — |
-| Artefak | – | `android-builds` 72,6 MB |
+| | Run #1 | Run #2 | Run #3 |
+| --- | --- | --- | --- |
+| URL | `/actions/runs/45547458858` | `/actions/runs/45553405020` | `/actions/runs/45557977150` |
+| Commit | `79284c6` | `a716bb4` | `2cec604` |
+| Event | push ke `main` | push ke `main` | push ke `main` |
+| Hasil | ❌ failure | ✅ success | ✅ success |
+| Durasi | 1m 9s | 7m 14s | 5m 12s |
+| Step gagal | Analisis statis | — | — |
+| Artefak | – | `android-builds` 72,6 MB | `android-builds` 72,6 MB |
+
+Run #3 membuktikan hal yang mudah terlewat: commit yang hanya mengubah
+Markdown tetap menjalankan format, analisis, 95 test, dan build. Pipeline tidak
+membedakan "commit penting" dan "commit dokumentasi".
 
 Step pada run #2, semuanya hijau:
 
