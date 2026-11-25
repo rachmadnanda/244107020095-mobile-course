@@ -1,10 +1,10 @@
-import 'package:_07_week_7_clean_architecture/core/failures.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/data/local/note_model.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/entities/note.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/repositories/note_repository.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/usecases/get_notes.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/usecases/sync_notes.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/presentation/providers/notes_providers.dart';
+import 'package:week_07_clean_architecture/core/failures.dart';
+import 'package:week_07_clean_architecture/features/notes/data/local/note_model.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/entities/note.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/repositories/note_repository.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/usecases/get_notes.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/usecases/sync_notes.dart';
+import 'package:week_07_clean_architecture/features/notes/presentation/providers/notes_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

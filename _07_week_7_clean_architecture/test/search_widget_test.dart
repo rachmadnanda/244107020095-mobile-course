@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:_07_week_7_clean_architecture/core/failures.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/entities/note.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/repositories/note_repository.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/presentation/pages/notes_page.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/presentation/providers/notes_providers.dart';
+import 'package:week_07_clean_architecture/core/failures.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/entities/note.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/repositories/note_repository.dart';
+import 'package:week_07_clean_architecture/features/notes/presentation/pages/notes_page.dart';
+import 'package:week_07_clean_architecture/features/notes/presentation/providers/notes_providers.dart';
 
 /// Repository palsu minimal untuk widget test (tanpa SQLite).
 class _FakeRepo implements NoteRepository {

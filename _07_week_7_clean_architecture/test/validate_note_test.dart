@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:_07_week_7_clean_architecture/core/failures.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/entities/note.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/repositories/note_repository.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/usecases/add_note.dart';
+import 'package:week_07_clean_architecture/core/failures.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/entities/note.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/repositories/note_repository.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/usecases/add_note.dart';
 
 /// Repository palsu yang mencatat apakah addNote pernah dipanggil.
 class SpyNoteRepository implements NoteRepository {

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:_07_week_7_clean_architecture/features/notes/domain/entities/note.dart';
-import 'package:_07_week_7_clean_architecture/features/notes/domain/usecases/search_notes.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/entities/note.dart';
+import 'package:week_07_clean_architecture/features/notes/domain/usecases/search_notes.dart';
 
 /// Data uji: judul sengaja bervariasi huruf besar/kecil.
 List<Note> _sample() => [
